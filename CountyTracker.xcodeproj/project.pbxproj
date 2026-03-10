@@ -22,6 +22,7 @@
 		961C2821ABEBB3E94DE1A866 /* CountyTrackerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE525E02E30DB8B92094D13C /* CountyTrackerStore.swift */; };
 		A0C130040B53B20C4FEFBE1F /* counties.json in Resources */ = {isa = PBXBuildFile; fileRef = B5B74288FD2DDC198AB0EF4B /* counties.json */; };
 		C31CAC3967B26A160D5E037D /* CountyNameNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F6C5E7FDB3A4A0F2453B72 /* CountyNameNormalizer.swift */; };
+		CB00CF196360AEC64DA78C4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5B4AAE4CF9B6737560973B52 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		2A90ABC78841EC3EFAD5411C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3809E092438F109F06C0A53A /* CountyTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CountyTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerApp.swift; sourceTree = "<group>"; };
+		5B4AAE4CF9B6737560973B52 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		67F6C5E7FDB3A4A0F2453B72 /* CountyNameNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyNameNormalizer.swift; sourceTree = "<group>"; };
 		6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapChartFormat.swift; sourceTree = "<group>"; };
 		8C898E9CD52AC834CA19A557 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -56,6 +58,7 @@
 		BBAB84F1DA37457BE2F2C813 /* CountyTrackerIOS */ = {
 			isa = PBXGroup;
 			children = (
+				5B4AAE4CF9B6737560973B52 /* Assets.xcassets */,
 				2A90ABC78841EC3EFAD5411C /* ContentView.swift */,
 				B5B74288FD2DDC198AB0EF4B /* counties.json */,
 				D424748F3E548E45F4BE6AF9 /* county_centroids.json */,
@@ -140,6 +143,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB00CF196360AEC64DA78C4C /* Assets.xcassets in Resources */,
 				A0C130040B53B20C4FEFBE1F /* counties.json in Resources */,
 				1391379775B654A856F7AF09 /* county_centroids.json in Resources */,
 			);
