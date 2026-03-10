@@ -20,15 +20,17 @@ struct CountyBoundaryMapView: UIViewRepresentable {
         mapView.pointOfInterestFilter = .excludingAll
         mapView.setRegion(region, animated: false)
 
-        // Load all county polygons from the bundled GeoJSON (cached after first call).
         Task {
             do {
-                let polygons = try await CountyBoundaryLoader.shared.loadPolygons()
+                async let polys = CountyBoundaryLoader.shared.loadPolygons()
+                async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
+                let (polygons, annotations) = try await (polys, anns)
                 await MainActor.run {
                     mapView.addOverlays(polygons, level: .aboveRoads)
+                    mapView.addAnnotations(annotations)
                 }
             } catch {
-                print("CountyBoundaryMapView: failed to load county polygons – \(error)")
+                print("CountyBoundaryMapView: failed to load – \(error)")
             }
         }
 
@@ -36,10 +38,10 @@ struct CountyBoundaryMapView: UIViewRepresentable {
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        let centerDelta = abs(mapView.region.center.latitude - region.center.latitude)
-            + abs(mapView.region.center.longitude - region.center.longitude)
-        let spanDelta = abs(mapView.region.span.latitudeDelta - region.span.latitudeDelta)
-            + abs(mapView.region.span.longitudeDelta - region.span.longitudeDelta)
+        let centerDelta = abs(mapView.region.center.latitude  - region.center.latitude)
+                        + abs(mapView.region.center.longitude - region.center.longitude)
+        let spanDelta   = abs(mapView.region.span.latitudeDelta  - region.span.latitudeDelta)
+                        + abs(mapView.region.span.longitudeDelta - region.span.longitudeDelta)
 
         if centerDelta > 0.0001 || spanDelta > 0.0001 {
             mapView.setRegion(region, animated: true)
@@ -55,17 +57,31 @@ struct CountyBoundaryMapView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             parent.region = mapView.region
+            let span = mapView.region.span.latitudeDelta
+            for ann in mapView.annotations {
+                (mapView.view(for: ann) as? CountyLabelAnnotationView)?.update(span: span)
+            }
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
-                renderer.strokeColor = UIColor.darkGray.withAlphaComponent(0.45)
-                renderer.lineWidth = 0.5
-                renderer.fillColor = .clear
+                renderer.strokeColor = UIColor(red: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
+                renderer.lineWidth   = 1.5
+                renderer.fillColor   = .clear
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard annotation is MKPointAnnotation else { return nil }
+            let id   = "CountyLabel"
+            let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? CountyLabelAnnotationView)
+                       ?? CountyLabelAnnotationView(annotation: annotation, reuseIdentifier: id)
+            view.annotation = annotation
+            view.update(span: mapView.region.span.latitudeDelta)
+            return view
         }
     }
 }

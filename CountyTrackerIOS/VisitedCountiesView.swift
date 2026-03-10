@@ -138,12 +138,15 @@ private struct VisitedCountyMapView: UIViewRepresentable {
 
         Task {
             do {
-                let polygons = try await CountyBoundaryLoader.shared.loadPolygons()
+                async let polys = CountyBoundaryLoader.shared.loadPolygons()
+                async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
+                let (polygons, annotations) = try await (polys, anns)
                 await MainActor.run {
                     mapView.addOverlays(polygons, level: .aboveRoads)
+                    mapView.addAnnotations(annotations)
                 }
             } catch {
-                print("VisitedCountyMapView: failed to load county polygons – \(error)")
+                print("VisitedCountyMapView: failed to load – \(error)")
             }
         }
 
@@ -162,6 +165,13 @@ private struct VisitedCountyMapView: UIViewRepresentable {
             self.parent = parent
         }
 
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            let span = mapView.region.span.latitudeDelta
+            for ann in mapView.annotations {
+                (mapView.view(for: ann) as? CountyLabelAnnotationView)?.update(span: span)
+            }
+        }
+
         func refreshFillStyles(on mapView: MKMapView) {
             let visited = parent.visitedKeys
             for renderer in mapView.overlays.compactMap({ mapView.renderer(for: $0) as? MKPolygonRenderer }) {
@@ -169,7 +179,8 @@ private struct VisitedCountyMapView: UIViewRepresentable {
                 renderer.fillColor = isVisited
                     ? UIColor.systemBlue.withAlphaComponent(0.38)
                     : UIColor.clear
-                renderer.strokeColor = UIColor.clear
+                renderer.strokeColor = UIColor(red: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
+                renderer.lineWidth   = 1.5
                 renderer.setNeedsDisplay()
             }
         }
@@ -178,13 +189,24 @@ private struct VisitedCountyMapView: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
-                renderer.fillColor = isVisited
+                renderer.fillColor   = isVisited
                     ? UIColor.systemBlue.withAlphaComponent(0.38)
                     : UIColor.clear
-                renderer.strokeColor = UIColor.clear
+                renderer.strokeColor = UIColor(red: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
+                renderer.lineWidth   = 1.5
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard annotation is MKPointAnnotation else { return nil }
+            let id   = "CountyLabel"
+            let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? CountyLabelAnnotationView)
+                       ?? CountyLabelAnnotationView(annotation: annotation, reuseIdentifier: id)
+            view.annotation = annotation
+            view.update(span: mapView.region.span.latitudeDelta)
+            return view
         }
     }
 }
