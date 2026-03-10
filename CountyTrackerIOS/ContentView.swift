@@ -75,16 +75,6 @@ struct ContentView: View {
                         .glassCard(palette)
 
                         HStack(spacing: 8) {
-                            Button("Allow While Using") {
-                                viewModel.requestPermission()
-                            }
-                            .buttonStyle(.bordered)
-
-                            Button("Allow Always") {
-                                viewModel.requestAlwaysPermission()
-                            }
-                            .buttonStyle(.bordered)
-
                             Button(locationService.isTracking ? "Tracking" : "Start") {
                                 viewModel.startTracking()
                             }
@@ -97,6 +87,11 @@ struct ContentView: View {
                             }
                             .buttonStyle(.bordered)
                             .disabled(!locationService.isTracking)
+
+                            Button("Location Settings") {
+                                locationService.openAppSettings()
+                            }
+                            .buttonStyle(.bordered)
                         }
 
                         VStack(alignment: .leading, spacing: 10) {
