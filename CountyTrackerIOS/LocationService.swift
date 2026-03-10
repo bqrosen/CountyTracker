@@ -21,8 +21,16 @@ final class LocationService: NSObject, ObservableObject {
         authorizationStatus = manager.authorizationStatus
     }
 
-    func requestPermission() {
+    func requestWhenInUsePermission() {
         manager.requestWhenInUseAuthorization()
+    }
+
+    func requestAlwaysPermission() {
+        if authorizationStatus == .notDetermined {
+            manager.requestWhenInUseAuthorization()
+            return
+        }
+        manager.requestAlwaysAuthorization()
     }
 
     func startTracking() {
@@ -32,7 +40,7 @@ final class LocationService: NSObject, ObservableObject {
         }
 
         if authorizationStatus == .notDetermined {
-            requestPermission()
+            requestWhenInUsePermission()
             return
         }
 

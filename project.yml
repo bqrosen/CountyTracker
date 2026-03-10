@@ -1,0 +1,41 @@
+name: CountyTracker
+options:
+  minimumXcodeGenVersion: 2.45.0
+  deploymentTarget:
+    iOS: 16.0
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+targets:
+  CountyTracker:
+    type: application
+    platform: iOS
+    sources:
+      - path: CountyTrackerIOS
+        excludes:
+          - README.md
+    info:
+      path: CountyTrackerIOS/Info.plist
+      properties:
+        CFBundleDevelopmentRegion: en
+        CFBundleDisplayName: CountyTracker
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UILaunchScreen: {}
+        NSLocationWhenInUseUsageDescription: CountyTracker uses your location to record counties you've visited.
+        NSLocationAlwaysAndWhenInUseUsageDescription: CountyTracker uses your location to keep tracking counties while running in the background.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bqrosen.CountyTracker
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: NO
+    scheme:
+      testTargets: []

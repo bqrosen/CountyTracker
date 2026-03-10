@@ -1,0 +1,304 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		085B4D5BBF937BBEE24F6C6D /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0EE401C8012ADB838AA44E /* LocationService.swift */; };
+		0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A90ABC78841EC3EFAD5411C /* ContentView.swift */; };
+		5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */; };
+		714873175BB7CA8DD71F6405 /* CountyTrackerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */; };
+		87D51CB00415B450BDC93919 /* CountyVisit.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */; };
+		961C2821ABEBB3E94DE1A866 /* CountyTrackerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE525E02E30DB8B92094D13C /* CountyTrackerStore.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerViewModel.swift; sourceTree = "<group>"; };
+		2A90ABC78841EC3EFAD5411C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		3809E092438F109F06C0A53A /* CountyTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CountyTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerApp.swift; sourceTree = "<group>"; };
+		8C898E9CD52AC834CA19A557 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CA0EE401C8012ADB838AA44E /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		CE525E02E30DB8B92094D13C /* CountyTrackerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerStore.swift; sourceTree = "<group>"; };
+		E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyVisit.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		9BFC2F0962DC6FFEB9E62EB5 = {
+			isa = PBXGroup;
+			children = (
+				BBAB84F1DA37457BE2F2C813 /* CountyTrackerIOS */,
+				C2A54EAEA411178BB547159A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BBAB84F1DA37457BE2F2C813 /* CountyTrackerIOS */ = {
+			isa = PBXGroup;
+			children = (
+				2A90ABC78841EC3EFAD5411C /* ContentView.swift */,
+				5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */,
+				CE525E02E30DB8B92094D13C /* CountyTrackerStore.swift */,
+				16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */,
+				E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */,
+				8C898E9CD52AC834CA19A557 /* Info.plist */,
+				CA0EE401C8012ADB838AA44E /* LocationService.swift */,
+			);
+			path = CountyTrackerIOS;
+			sourceTree = "<group>";
+		};
+		C2A54EAEA411178BB547159A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3809E092438F109F06C0A53A /* CountyTracker.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5AED0852EF1EB248AB9EA9D9 /* CountyTracker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B9E1448991FE468687F16B25 /* Build configuration list for PBXNativeTarget "CountyTracker" */;
+			buildPhases = (
+				E711F81E3E92885F85D86A8E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CountyTracker;
+			packageProductDependencies = (
+			);
+			productName = CountyTracker;
+			productReference = 3809E092438F109F06C0A53A /* CountyTracker.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		19BC49049645468723EBB157 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = CEF0C0DCC564FEA603367D9E /* Build configuration list for PBXProject "CountyTracker" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9BFC2F0962DC6FFEB9E62EB5;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C2A54EAEA411178BB547159A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5AED0852EF1EB248AB9EA9D9 /* CountyTracker */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E711F81E3E92885F85D86A8E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */,
+				5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */,
+				961C2821ABEBB3E94DE1A866 /* CountyTrackerStore.swift in Sources */,
+				714873175BB7CA8DD71F6405 /* CountyTrackerViewModel.swift in Sources */,
+				87D51CB00415B450BDC93919 /* CountyVisit.swift in Sources */,
+				085B4D5BBF937BBEE24F6C6D /* LocationService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		BF83AA922C9EC71D8912C437 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CountyTrackerIOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bqrosen.CountyTracker;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C02610F948BC8146992786A4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F45998FDE849E85224ED3C90 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FDF642E7140528201B5B1152 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CountyTrackerIOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bqrosen.CountyTracker;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B9E1448991FE468687F16B25 /* Build configuration list for PBXNativeTarget "CountyTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF83AA922C9EC71D8912C437 /* Debug */,
+				FDF642E7140528201B5B1152 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CEF0C0DCC564FEA603367D9E /* Build configuration list for PBXProject "CountyTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F45998FDE849E85224ED3C90 /* Debug */,
+				C02610F948BC8146992786A4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 19BC49049645468723EBB157 /* Project object */;
+}
