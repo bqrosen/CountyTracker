@@ -83,6 +83,19 @@ extension LocationService: CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        errorMessage = error.localizedDescription
+        guard let locationError = error as? CLError else {
+            errorMessage = error.localizedDescription
+            return
+        }
+
+        switch locationError.code {
+        case .locationUnknown:
+            return
+        case .denied:
+            errorMessage = "Location permission denied. Enable it in Settings > Privacy & Security > Location Services."
+            isTracking = false
+        default:
+            errorMessage = locationError.localizedDescription
+        }
     }
 }
