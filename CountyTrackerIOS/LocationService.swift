@@ -1,5 +1,6 @@
 import CoreLocation
 import Foundation
+import UIKit
 
 @MainActor
 final class LocationService: NSObject, ObservableObject {
@@ -57,6 +58,13 @@ final class LocationService: NSObject, ObservableObject {
     func stopTracking() {
         isTracking = false
         manager.stopUpdatingLocation()
+    }
+
+    func openAppSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString), UIApplication.shared.canOpenURL(url) else {
+            return
+        }
+        UIApplication.shared.open(url)
     }
 }
 
