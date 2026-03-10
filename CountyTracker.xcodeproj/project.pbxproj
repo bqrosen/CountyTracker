@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		085B4D5BBF937BBEE24F6C6D /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0EE401C8012ADB838AA44E /* LocationService.swift */; };
 		0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A90ABC78841EC3EFAD5411C /* ContentView.swift */; };
+		5CEF72F48A1BA1858160720D /* CountyBoundaryMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */; };
 		5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */; };
 		714873175BB7CA8DD71F6405 /* CountyTrackerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */; };
 		87D51CB00415B450BDC93919 /* CountyVisit.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyBoundaryMapView.swift; sourceTree = "<group>"; };
 		16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerViewModel.swift; sourceTree = "<group>"; };
 		2A90ABC78841EC3EFAD5411C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3809E092438F109F06C0A53A /* CountyTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CountyTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -41,6 +43,7 @@
 			isa = PBXGroup;
 			children = (
 				2A90ABC78841EC3EFAD5411C /* ContentView.swift */,
+				162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */,
 				5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */,
 				CE525E02E30DB8B92094D13C /* CountyTrackerStore.swift */,
 				16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */,
@@ -116,6 +119,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */,
+				5CEF72F48A1BA1858160720D /* CountyBoundaryMapView.swift in Sources */,
 				5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */,
 				961C2821ABEBB3E94DE1A866 /* CountyTrackerStore.swift in Sources */,
 				714873175BB7CA8DD71F6405 /* CountyTrackerViewModel.swift in Sources */,
