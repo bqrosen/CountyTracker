@@ -11,30 +11,49 @@ struct VisitedCountiesView: View {
     @State private var exportDocument = MapChartTextDocument(text: "")
     @State private var alertMessage: String?
 
-    var body: some View {
-        VStack(spacing: 12) {
-            VisitedCountyMapView(
-                visitedKeys: Set(store.visits.map { $0.key })
-            )
-            .frame(height: 380)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+    private var palette: GlassPalette {
+        GlassPalette(theme: themeSettings)
+    }
 
-            List(store.visits) { visit in
-                HStack {
-                    Text(visit.displayName)
-                    Spacer()
-                    Text("\(visit.visitCount)")
-                        .foregroundStyle(.secondary)
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [palette.backgroundGradientTop, palette.backgroundGradientBottom],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 12) {
+                VisitedCountyMapView(
+                    visitedKeys: Set(store.visits.map { $0.key })
+                )
+                .frame(height: 380)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .glassCard(palette, cornerRadius: 22)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Counties Colored")
+                        .font(.headline)
+
+                    List(store.visits) { visit in
+                        HStack {
+                            Text(visit.displayName)
+                            Spacer()
+                            Text("\(visit.visitCount)")
+                                .foregroundStyle(palette.secondaryText)
+                        }
+                        .listRowBackground(palette.rowFill)
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
-                .listRowBackground(listRowBackgroundColor)
+                .padding(14)
+                .glassCard(palette)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(listBackgroundColor)
+            .padding()
         }
-        .padding()
-        .foregroundStyle(primaryTextColor)
-        .background(screenBackgroundColor.ignoresSafeArea())
+        .foregroundStyle(palette.primaryText)
         .navigationTitle("Visited Counties")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -90,22 +109,6 @@ struct VisitedCountiesView: View {
         }, message: {
             Text(alertMessage ?? "")
         })
-    }
-
-    private var screenBackgroundColor: Color {
-        themeSettings.isNord ? themeSettings.nordBackground : Color(.systemBackground)
-    }
-
-    private var listBackgroundColor: Color {
-        themeSettings.isNord ? themeSettings.nordSecondaryBackground : Color(.systemBackground)
-    }
-
-    private var listRowBackgroundColor: Color {
-        themeSettings.isNord ? themeSettings.nordCardBackground : Color(.secondarySystemBackground)
-    }
-
-    private var primaryTextColor: Color {
-        themeSettings.isNord ? themeSettings.nordPrimaryText : .primary
     }
 }
 
