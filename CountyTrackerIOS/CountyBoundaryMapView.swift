@@ -66,7 +66,7 @@ struct CountyBoundaryMapView: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
-                renderer.strokeColor = UIColor(red: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
+                renderer.strokeColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 0.85)
                 renderer.lineWidth   = 1.5
                 renderer.fillColor   = .clear
                 return renderer
