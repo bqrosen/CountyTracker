@@ -28,6 +28,14 @@ struct ContentView: View {
                     statCard("Visits", value: "\(store.totalVisits)")
                 }
 
+                NavigationLink {
+                    VisitedCountiesView()
+                } label: {
+                    Label("Visited Counties Map", systemImage: "map")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Current County")
                         .font(.headline)
@@ -100,7 +108,7 @@ struct ContentView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu("Theme") {
                         ForEach(AppTheme.allCases) { theme in
-                                    Button(themeLabel(theme)) {
+                            Button(themeLabel(theme)) {
                                 themeSettings.selectedTheme = theme
                             }
                         }
@@ -157,9 +165,9 @@ struct ContentView: View {
         themeSettings.isNord ? themeSettings.nordSecondaryText : .secondary
     }
 
-        private func themeLabel(_ theme: AppTheme) -> String {
-            themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
-        }
+    private func themeLabel(_ theme: AppTheme) -> String {
+        themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
+    }
 
     private func permissionText(_ status: CLAuthorizationStatus) -> String {
         switch status {

@@ -1,0 +1,280 @@
+import SwiftUI
+import MapKit
+
+struct VisitedCountiesView: View {
+    @EnvironmentObject private var store: CountyTrackerStore
+    @EnvironmentObject private var themeSettings: ThemeSettings
+
+    var body: some View {
+        VStack(spacing: 12) {
+            VisitedCountyMapView(
+                visitedKeys: Set(store.visits.map { countyKey(stateCode: $0.stateCode, countyName: $0.countyName) })
+            )
+            .frame(height: 380)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            List(store.visits) { visit in
+                HStack {
+                    Text(visit.displayName)
+                    Spacer()
+                    Text("\(visit.visitCount)")
+                        .foregroundStyle(.secondary)
+                }
+                .listRowBackground(listRowBackgroundColor)
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(listBackgroundColor)
+        }
+        .padding()
+        .foregroundStyle(primaryTextColor)
+        .background(screenBackgroundColor.ignoresSafeArea())
+        .navigationTitle("Visited Counties")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func countyKey(stateCode: String, countyName: String) -> String {
+        "us-\(stateCode)-\(normalizeCountyName(countyName))".lowercased()
+    }
+
+    private func normalizeCountyName(_ name: String) -> String {
+        name
+            .replacingOccurrences(of: " County", with: "")
+            .replacingOccurrences(of: " Parish", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var screenBackgroundColor: Color {
+        themeSettings.isNord ? themeSettings.nordBackground : Color(.systemBackground)
+    }
+
+    private var listBackgroundColor: Color {
+        themeSettings.isNord ? themeSettings.nordSecondaryBackground : Color(.systemBackground)
+    }
+
+    private var listRowBackgroundColor: Color {
+        themeSettings.isNord ? themeSettings.nordCardBackground : Color(.secondarySystemBackground)
+    }
+
+    private var primaryTextColor: Color {
+        themeSettings.isNord ? themeSettings.nordPrimaryText : .primary
+    }
+}
+
+private struct VisitedCountyMapView: UIViewRepresentable {
+    let visitedKeys: Set<String>
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView(frame: .zero)
+        mapView.delegate = context.coordinator
+        mapView.showsUserLocation = false
+        mapView.pointOfInterestFilter = .excludingAll
+        mapView.isZoomEnabled = true
+        mapView.isScrollEnabled = true
+        mapView.isRotateEnabled = false
+        mapView.isPitchEnabled = false
+        mapView.setRegion(
+            MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 39.5, longitude: -98.35),
+                span: MKCoordinateSpan(latitudeDelta: 40.0, longitudeDelta: 55.0)
+            ),
+            animated: false
+        )
+
+        let lineOverlay = MKTileOverlay(urlTemplate: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image&layers=show:1")
+        lineOverlay.canReplaceMapContent = false
+        lineOverlay.minimumZ = 3
+        lineOverlay.maximumZ = 20
+        mapView.addOverlay(lineOverlay, level: .aboveLabels)
+
+        context.coordinator.refreshCounties(for: mapView.region)
+        return mapView
+    }
+
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        context.coordinator.parent = self
+        context.coordinator.refreshFillStyles(on: mapView)
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate {
+        var parent: VisitedCountyMapView
+
+        private var isLoading = false
+        private var loadedObjectIDs = Set<Int>()
+
+        init(_ parent: VisitedCountyMapView) {
+            self.parent = parent
+        }
+
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            refreshCounties(for: mapView.region)
+        }
+
+        func refreshCounties(for region: MKCoordinateRegion) {
+            guard !isLoading else { return }
+            isLoading = true
+
+            Task {
+                let fetched = await fetchCountyPolygons(in: region)
+                await MainActor.run {
+                    defer { self.isLoading = false }
+                    guard let mapView = self.currentMapView else { return }
+
+                    let newOverlays = fetched.filter { !self.loadedObjectIDs.contains($0.objectID) }
+                    newOverlays.forEach { self.loadedObjectIDs.insert($0.objectID) }
+                    mapView.addOverlays(newOverlays.map(\.polygon), level: .aboveRoads)
+                    self.refreshFillStyles(on: mapView)
+                }
+            }
+        }
+
+        func refreshFillStyles(on mapView: MKMapView) {
+            for overlay in mapView.overlays {
+                if let countyPolygon = overlay as? CountyPolygon {
+                    countyPolygon.isVisited = parent.visitedKeys.contains(countyPolygon.countyKey)
+                }
+            }
+
+            for renderer in mapView.overlays.compactMap({ mapView.renderer(for: $0) as? MKPolygonRenderer }) {
+                guard let polygon = renderer.polygon as? CountyPolygon else { continue }
+                renderer.fillColor = polygon.isVisited ? UIColor.systemBlue.withAlphaComponent(0.38) : UIColor.clear
+                renderer.strokeColor = UIColor.clear
+            }
+        }
+
+        private weak var currentMapView: MKMapView?
+
+        func mapViewWillStartLoadingMap(_ mapView: MKMapView) {
+            currentMapView = mapView
+        }
+
+        func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
+            currentMapView = mapView
+        }
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let tileOverlay = overlay as? MKTileOverlay {
+                let renderer = MKTileOverlayRenderer(tileOverlay: tileOverlay)
+                renderer.alpha = 0.9
+                return renderer
+            }
+
+            if let polygon = overlay as? CountyPolygon {
+                let renderer = MKPolygonRenderer(polygon: polygon)
+                renderer.fillColor = polygon.isVisited ? UIColor.systemBlue.withAlphaComponent(0.38) : UIColor.clear
+                renderer.strokeColor = UIColor.clear
+                return renderer
+            }
+
+            return MKOverlayRenderer(overlay: overlay)
+        }
+
+        private func fetchCountyPolygons(in region: MKCoordinateRegion) async -> [FetchedCounty] {
+            guard let url = Self.queryURL(for: region) else { return [] }
+
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let objects = try MKGeoJSONDecoder().decode(data)
+
+                var results: [FetchedCounty] = []
+                for object in objects {
+                    guard let feature = object as? MKGeoJSONFeature else { continue }
+
+                    let props = (try? feature.properties.flatMap { data -> [String: Any]? in
+                        let jsonObject = try JSONSerialization.jsonObject(with: data)
+                        return jsonObject as? [String: Any]
+                    }) ?? [:]
+
+                    guard
+                        let objectID = (props["OBJECTID"] as? NSNumber)?.intValue ?? Int(props["OBJECTID"] as? String ?? ""),
+                        let state = (props["STUSAB"] as? String)?.uppercased(),
+                        let name = props["NAME"] as? String
+                    else {
+                        continue
+                    }
+
+                    let key = Self.countyKey(stateCode: state, countyName: name)
+
+                    for geometry in feature.geometry {
+                        if let polygon = geometry as? MKPolygon {
+                            let countyPolygon = CountyPolygon(from: polygon, countyKey: key)
+                            results.append(FetchedCounty(objectID: objectID, polygon: countyPolygon))
+                        } else if let multi = geometry as? MKMultiPolygon {
+                            for polygon in multi.polygons {
+                                let countyPolygon = CountyPolygon(from: polygon, countyKey: key)
+                                results.append(FetchedCounty(objectID: objectID, polygon: countyPolygon))
+                            }
+                        }
+                    }
+                }
+                return results
+            } catch {
+                return []
+            }
+        }
+
+        private static func queryURL(for region: MKCoordinateRegion) -> URL? {
+            let minLat = region.center.latitude - region.span.latitudeDelta * 0.7
+            let maxLat = region.center.latitude + region.span.latitudeDelta * 0.7
+            let minLon = region.center.longitude - region.span.longitudeDelta * 0.7
+            let maxLon = region.center.longitude + region.span.longitudeDelta * 0.7
+
+            var components = URLComponents(string: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query")
+            components?.queryItems = [
+                URLQueryItem(name: "where", value: "1=1"),
+                URLQueryItem(name: "outFields", value: "OBJECTID,NAME,STUSAB"),
+                URLQueryItem(name: "f", value: "geojson"),
+                URLQueryItem(name: "geometryType", value: "esriGeometryEnvelope"),
+                URLQueryItem(name: "spatialRel", value: "esriSpatialRelIntersects"),
+                URLQueryItem(name: "inSR", value: "4326"),
+                URLQueryItem(name: "outSR", value: "4326"),
+                URLQueryItem(name: "geometry", value: "\(minLon),\(minLat),\(maxLon),\(maxLat)")
+            ]
+            return components?.url
+        }
+
+        private static func countyKey(stateCode: String, countyName: String) -> String {
+            "us-\(stateCode)-\(normalizeCountyName(countyName))".lowercased()
+        }
+
+        private static func normalizeCountyName(_ name: String) -> String {
+            name
+                .replacingOccurrences(of: " County", with: "")
+                .replacingOccurrences(of: " Parish", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+}
+
+private struct FetchedCounty {
+    let objectID: Int
+    let polygon: CountyPolygon
+}
+
+private final class CountyPolygon: MKPolygon {
+    let countyKey: String
+    var isVisited: Bool = false
+
+    init(from polygon: MKPolygon, countyKey: String) {
+        self.countyKey = countyKey
+
+        let outerCoordinates = polygon.coordinates
+        let interiorPolygons = polygon.interiorPolygons?.map {
+            MKPolygon(coordinates: $0.coordinates, count: $0.pointCount)
+        }
+
+        super.init(coordinates: outerCoordinates, count: outerCoordinates.count, interiorPolygons: interiorPolygons)
+    }
+}
+
+private extension MKPolygon {
+    var coordinates: [CLLocationCoordinate2D] {
+        var coords = Array(repeating: CLLocationCoordinate2D(), count: pointCount)
+        getCoordinates(&coords, range: NSRange(location: 0, length: pointCount))
+        return coords
+    }
+}

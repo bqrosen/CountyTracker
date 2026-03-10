@@ -12,6 +12,7 @@
 		5CEF72F48A1BA1858160720D /* CountyBoundaryMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */; };
 		5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */; };
 		714873175BB7CA8DD71F6405 /* CountyTrackerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */; };
+		72349F9389FA75D6611BE9DC /* VisitedCountiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1C60FBCDFBAC3434844898C /* VisitedCountiesView.swift */; };
 		87D51CB00415B450BDC93919 /* CountyVisit.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */; };
 		880DB92D9FA93DEBAFF7B5FE /* ThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE1C7CB1F99C4743A5A6988 /* ThemeSettings.swift */; };
 		961C2821ABEBB3E94DE1A866 /* CountyTrackerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE525E02E30DB8B92094D13C /* CountyTrackerStore.swift */; };
@@ -27,6 +28,7 @@
 		ADE1C7CB1F99C4743A5A6988 /* ThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettings.swift; sourceTree = "<group>"; };
 		CA0EE401C8012ADB838AA44E /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		CE525E02E30DB8B92094D13C /* CountyTrackerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerStore.swift; sourceTree = "<group>"; };
+		D1C60FBCDFBAC3434844898C /* VisitedCountiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitedCountiesView.swift; sourceTree = "<group>"; };
 		E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyVisit.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -51,6 +53,7 @@
 				8C898E9CD52AC834CA19A557 /* Info.plist */,
 				CA0EE401C8012ADB838AA44E /* LocationService.swift */,
 				ADE1C7CB1F99C4743A5A6988 /* ThemeSettings.swift */,
+				D1C60FBCDFBAC3434844898C /* VisitedCountiesView.swift */,
 			);
 			path = CountyTrackerIOS;
 			sourceTree = "<group>";
@@ -126,6 +129,7 @@
 				87D51CB00415B450BDC93919 /* CountyVisit.swift in Sources */,
 				085B4D5BBF937BBEE24F6C6D /* LocationService.swift in Sources */,
 				880DB92D9FA93DEBAFF7B5FE /* ThemeSettings.swift in Sources */,
+				72349F9389FA75D6611BE9DC /* VisitedCountiesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
