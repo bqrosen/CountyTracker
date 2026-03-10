@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F001A2B3C4D5E6F700112244 /* counties.geojson in Resources */ = {isa = PBXBuildFile; fileRef = F001A2B3C4D5E6F700112233 /* counties.geojson */; };
+		B001A2C3D4E5F607A8B9C0D2 /* CountyBoundaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001A2C3D4E5F607A8B9C0D1 /* CountyBoundaryStore.swift */; };
 		085B4D5BBF937BBEE24F6C6D /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0EE401C8012ADB838AA44E /* LocationService.swift */; };
 		0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A90ABC78841EC3EFAD5411C /* ContentView.swift */; };
 		12F0B9AA5E3DC0D472236051 /* MapChartFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */; };
@@ -22,6 +24,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F001A2B3C4D5E6F700112233 /* counties.geojson */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = counties.geojson; sourceTree = "<group>"; };
+		B001A2C3D4E5F607A8B9C0D1 /* CountyBoundaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyBoundaryStore.swift; sourceTree = "<group>"; };
 		162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyBoundaryMapView.swift; sourceTree = "<group>"; };
 		16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerViewModel.swift; sourceTree = "<group>"; };
 		2A90ABC78841EC3EFAD5411C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -51,6 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				2A90ABC78841EC3EFAD5411C /* ContentView.swift */,
+				B001A2C3D4E5F607A8B9C0D1 /* CountyBoundaryStore.swift */,
 				162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */,
 				67F6C5E7FDB3A4A0F2453B72 /* CountyNameNormalizer.swift */,
 				5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */,
@@ -58,6 +63,7 @@
 				16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */,
 				E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */,
 				8C898E9CD52AC834CA19A557 /* Info.plist */,
+				F001A2B3C4D5E6F700112233 /* counties.geojson */,
 				C30CD17F426B396FB2709973 /* LiquidGlassStyle.swift */,
 				CA0EE401C8012ADB838AA44E /* LocationService.swift */,
 				6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */,
@@ -82,6 +88,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B9E1448991FE468687F16B25 /* Build configuration list for PBXNativeTarget "CountyTracker" */;
 			buildPhases = (
+				F001A2B3C4D5E6F700112255 /* Resources */,
 				E711F81E3E92885F85D86A8E /* Sources */,
 			);
 			buildRules = (
@@ -125,12 +132,24 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		F001A2B3C4D5E6F700112255 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F001A2B3C4D5E6F700112244 /* counties.geojson in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		E711F81E3E92885F85D86A8E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */,
+				B001A2C3D4E5F607A8B9C0D2 /* CountyBoundaryStore.swift in Sources */,
 				5CEF72F48A1BA1858160720D /* CountyBoundaryMapView.swift in Sources */,
 				C31CAC3967B26A160D5E037D /* CountyNameNormalizer.swift in Sources */,
 				5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */,

@@ -20,12 +20,17 @@ struct CountyBoundaryMapView: UIViewRepresentable {
         mapView.pointOfInterestFilter = .excludingAll
         mapView.setRegion(region, animated: false)
 
-        let countyLayerIDs = "1,3,5,7,9,11,13"
-        let overlay = MKTileOverlay(urlTemplate: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image&layers=show:\(countyLayerIDs)")
-        overlay.canReplaceMapContent = false
-        overlay.minimumZ = 0
-        overlay.maximumZ = 20
-        mapView.addOverlay(overlay, level: .aboveLabels)
+        // Load all county polygons from the bundled GeoJSON (cached after first call).
+        Task {
+            do {
+                let polygons = try await CountyBoundaryLoader.shared.loadPolygons()
+                await MainActor.run {
+                    mapView.addOverlays(polygons, level: .aboveRoads)
+                }
+            } catch {
+                print("CountyBoundaryMapView: failed to load county polygons – \(error)")
+            }
+        }
 
         return mapView
     }
@@ -53,9 +58,11 @@ struct CountyBoundaryMapView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            if let tileOverlay = overlay as? MKTileOverlay {
-                let renderer = MKTileOverlayRenderer(tileOverlay: tileOverlay)
-                renderer.alpha = 1.0
+            if let polygon = overlay as? MKPolygon {
+                let renderer = MKPolygonRenderer(polygon: polygon)
+                renderer.strokeColor = UIColor.darkGray.withAlphaComponent(0.45)
+                renderer.lineWidth = 0.5
+                renderer.fillColor = .clear
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
