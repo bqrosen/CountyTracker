@@ -20,9 +20,10 @@ struct CountyBoundaryMapView: UIViewRepresentable {
         mapView.pointOfInterestFilter = .excludingAll
         mapView.setRegion(region, animated: false)
 
-        let overlay = MKTileOverlay(urlTemplate: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image&layers=show:1")
+        let countyLayerIDs = "1,3,5,7,9,11,13"
+        let overlay = MKTileOverlay(urlTemplate: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image&layers=show:\(countyLayerIDs)")
         overlay.canReplaceMapContent = false
-        overlay.minimumZ = 3
+        overlay.minimumZ = 0
         overlay.maximumZ = 20
         mapView.addOverlay(overlay, level: .aboveLabels)
 
@@ -54,7 +55,7 @@ struct CountyBoundaryMapView: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let tileOverlay = overlay as? MKTileOverlay {
                 let renderer = MKTileOverlayRenderer(tileOverlay: tileOverlay)
-                renderer.alpha = 0.8
+                renderer.alpha = 1.0
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
