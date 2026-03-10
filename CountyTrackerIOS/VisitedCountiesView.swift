@@ -130,8 +130,8 @@ private struct VisitedCountyMapView: UIViewRepresentable {
         mapView.isPitchEnabled = false
         mapView.setRegion(
             MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: 39.5, longitude: -98.35),
-                span: MKCoordinateSpan(latitudeDelta: 40.0, longitudeDelta: 55.0)
+                center: CLLocationCoordinate2D(latitude: 38.5, longitude: -96.0),
+                span: MKCoordinateSpan(latitudeDelta: 28.0, longitudeDelta: 62.0)
             ),
             animated: false
         )
@@ -179,7 +179,7 @@ private struct VisitedCountyMapView: UIViewRepresentable {
                 renderer.fillColor = isVisited
                     ? UIColor.systemBlue.withAlphaComponent(0.38)
                     : UIColor.clear
-                renderer.strokeColor = UIColor(red: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
+                renderer.strokeColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 0.85)
                 renderer.lineWidth   = 1.5
                 renderer.setNeedsDisplay()
             }
@@ -192,7 +192,7 @@ private struct VisitedCountyMapView: UIViewRepresentable {
                 renderer.fillColor   = isVisited
                     ? UIColor.systemBlue.withAlphaComponent(0.38)
                     : UIColor.clear
-                renderer.strokeColor = UIColor(red: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
+                renderer.strokeColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 0.85)
                 renderer.lineWidth   = 1.5
                 return renderer
             }

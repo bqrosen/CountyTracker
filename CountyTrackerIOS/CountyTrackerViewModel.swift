@@ -9,7 +9,7 @@ final class CountyTrackerViewModel: ObservableObject {
 
     @Published var mapRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 39.5, longitude: -98.35),
-        span: MKCoordinateSpan(latitudeDelta: 8.0, longitudeDelta: 8.0)
+        span: MKCoordinateSpan(latitudeDelta: 1.45, longitudeDelta: 1.45)
     )
 
     let locationService: LocationService
