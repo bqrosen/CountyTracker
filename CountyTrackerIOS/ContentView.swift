@@ -42,17 +42,6 @@ struct ContentView: View {
                             statCard("Visits", value: "\(store.totalVisits)")
                         }
 
-                        NavigationLink {
-                            VisitedCountiesView()
-                        } label: {
-                            Label("Open Visited Counties Map", systemImage: "map.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(palette.accent)
-
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Current County")
                                 .font(.headline)
@@ -73,6 +62,17 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(14)
                         .glassCard(palette)
+
+                        NavigationLink {
+                            VisitedCountiesView()
+                        } label: {
+                            Label("Open Visited Counties Map", systemImage: "map.fill")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(palette.accent)
 
                         HStack(spacing: 8) {
                             Button(locationService.isTracking ? "Tracking" : "Start") {
