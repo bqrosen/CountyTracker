@@ -14,6 +14,12 @@ targets:
       - path: CountyTrackerIOS
         excludes:
           - README.md
+          - counties.json
+          - county_centroids.json
+      - path: CountyTrackerIOS/counties.json
+        buildPhase: resources
+      - path: CountyTrackerIOS/county_centroids.json
+        buildPhase: resources
     info:
       path: CountyTrackerIOS/Info.plist
       properties:
