@@ -15,15 +15,16 @@ This folder contains a SwiftUI iOS app implementation that:
 - `CountyVisit.swift`: county data model
 
 ## Xcode setup
-Because this environment does not have full Xcode tooling enabled, create the Xcode project locally:
+Project generation has already been done in this repository:
 
-1. Open Xcode and create a new **iOS App** project named **CountyTracker** (SwiftUI lifecycle).
-2. Replace the generated Swift files with the files from this folder.
-3. In your app target settings, add these Info.plist keys:
-   - `NSLocationWhenInUseUsageDescription` = `CountyTracker uses your location to record counties you've visited.`
-4. Build and run on a real iPhone (recommended for GPS).
+1. Open `CountyTracker.xcodeproj` in Xcode.
+2. Select the `CountyTracker` scheme and an iPhone simulator or device.
+3. Build and run.
+
+`NSLocationWhenInUseUsageDescription` is already set in `CountyTrackerIOS/Info.plist`.
 
 ## Notes
 - County detection uses `CLPlacemark.subAdministrativeArea`.
 - Only US locations (`isoCountryCode == "US"`) are recorded.
 - Updates are throttled by time and distance to reduce geocoding calls.
+- App supports both While Using and Always location permission prompts.

@@ -12,14 +12,17 @@ final class CountyTrackerViewModel: ObservableObject {
         span: MKCoordinateSpan(latitudeDelta: 8.0, longitudeDelta: 8.0)
     )
 
-    let locationService = LocationService()
-    let store = CountyTrackerStore()
+    let locationService: LocationService
+    let store: CountyTrackerStore
 
     private let geocoder = CLGeocoder()
     private var lastResolvedLocation: CLLocation?
     private var lastResolvedAt: Date?
 
-    init() {
+    init(locationService: LocationService, store: CountyTrackerStore) {
+        self.locationService = locationService
+        self.store = store
+
         locationService.onLocationUpdate = { [weak self] location in
             guard let self else { return }
             Task {
@@ -29,7 +32,11 @@ final class CountyTrackerViewModel: ObservableObject {
     }
 
     func requestPermission() {
-        locationService.requestPermission()
+        locationService.requestWhenInUsePermission()
+    }
+
+    func requestAlwaysPermission() {
+        locationService.requestAlwaysPermission()
     }
 
     func startTracking() {

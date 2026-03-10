@@ -4,6 +4,8 @@ import CoreLocation
 
 struct ContentView: View {
     @EnvironmentObject private var viewModel: CountyTrackerViewModel
+    @EnvironmentObject private var locationService: LocationService
+    @EnvironmentObject private var store: CountyTrackerStore
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -20,9 +22,9 @@ struct ContentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 HStack(spacing: 12) {
-                    statCard("Counties", value: "\(viewModel.store.totalUniqueCounties)")
-                    statCard("States", value: "\(viewModel.store.totalStatesVisited)")
-                    statCard("Visits", value: "\(viewModel.store.totalVisits)")
+                    statCard("Counties", value: "\(store.totalUniqueCounties)")
+                    statCard("States", value: "\(store.totalStatesVisited)")
+                    statCard("Visits", value: "\(store.totalVisits)")
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -32,38 +34,43 @@ struct ContentView: View {
                         .font(.title3)
                         .fontWeight(.semibold)
 
-                    if let errorMessage = viewModel.locationService.errorMessage {
+                    if let errorMessage = locationService.errorMessage {
                         Text(errorMessage)
                             .font(.footnote)
                             .foregroundStyle(.red)
                     }
 
-                    Text("Permission: \(permissionText(viewModel.locationService.authorizationStatus))")
+                    Text("Permission: \(permissionText(locationService.authorizationStatus))")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 HStack {
-                    Button("Allow Location") {
+                    Button("Allow While Using") {
                         viewModel.requestPermission()
                     }
                     .buttonStyle(.bordered)
 
-                    Button(viewModel.locationService.isTracking ? "Tracking" : "Start") {
+                    Button("Allow Always") {
+                        viewModel.requestAlwaysPermission()
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button(locationService.isTracking ? "Tracking" : "Start") {
                         viewModel.startTracking()
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.locationService.isTracking)
+                    .disabled(locationService.isTracking)
 
                     Button("Stop") {
                         viewModel.stopTracking()
                     }
                     .buttonStyle(.bordered)
-                    .disabled(!viewModel.locationService.isTracking)
+                    .disabled(!locationService.isTracking)
                 }
 
-                List(viewModel.store.visits) { visit in
+                List(store.visits) { visit in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(visit.displayName)
                             .font(.headline)
@@ -87,7 +94,7 @@ struct ContentView: View {
                     Button("Clear") {
                         viewModel.clearData()
                     }
-                    .disabled(viewModel.store.visits.isEmpty)
+                    .disabled(store.visits.isEmpty)
                 }
             }
         }
