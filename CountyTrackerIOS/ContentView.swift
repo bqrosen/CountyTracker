@@ -18,7 +18,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                Map(coordinateRegion: $viewModel.mapRegion, showsUserLocation: true)
+                CountyBoundaryMapView(region: $viewModel.mapRegion)
                     .frame(height: 240)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 

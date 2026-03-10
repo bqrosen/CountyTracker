@@ -60,6 +60,7 @@ final class LocationService: NSObject, ObservableObject {
     }
 }
 
+@MainActor
 extension LocationService: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus

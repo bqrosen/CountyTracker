@@ -18,6 +18,7 @@ final class CountyTrackerViewModel: ObservableObject {
     private let geocoder = CLGeocoder()
     private var lastResolvedLocation: CLLocation?
     private var lastResolvedAt: Date?
+    private var hasCenteredOnUser = false
 
     init(locationService: LocationService, store: CountyTrackerStore) {
         self.locationService = locationService
@@ -40,6 +41,7 @@ final class CountyTrackerViewModel: ObservableObject {
     }
 
     func startTracking() {
+        hasCenteredOnUser = false
         locationService.startTracking()
     }
 
@@ -52,10 +54,13 @@ final class CountyTrackerViewModel: ObservableObject {
     }
 
     private func handleLocationUpdate(_ location: CLLocation) async {
-        mapRegion = MKCoordinateRegion(
-            center: location.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.25, longitudeDelta: 0.25)
-        )
+        if !hasCenteredOnUser {
+            mapRegion = MKCoordinateRegion(
+                center: location.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.25, longitudeDelta: 0.25)
+            )
+            hasCenteredOnUser = true
+        }
 
         guard shouldResolveCounty(for: location) else {
             return
