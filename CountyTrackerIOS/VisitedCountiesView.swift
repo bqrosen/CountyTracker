@@ -136,9 +136,10 @@ private struct VisitedCountyMapView: UIViewRepresentable {
             animated: false
         )
 
-        let lineOverlay = MKTileOverlay(urlTemplate: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image&layers=show:1")
+        let countyLayerIDs = "1,3,5,7,9,11,13"
+        let lineOverlay = MKTileOverlay(urlTemplate: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image&layers=show:\(countyLayerIDs)")
         lineOverlay.canReplaceMapContent = false
-        lineOverlay.minimumZ = 3
+        lineOverlay.minimumZ = 0
         lineOverlay.maximumZ = 20
         mapView.addOverlay(lineOverlay, level: .aboveLabels)
 
