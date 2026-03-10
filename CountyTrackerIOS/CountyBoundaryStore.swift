@@ -132,9 +132,9 @@ final class CountyLabelAnnotationView: MKAnnotationView {
         backgroundColor = .clear
         canShowCallout  = false
 
-        label.numberOfLines = 2
+        label.numberOfLines = 1
         label.textAlignment = .center
-        label.lineBreakMode = .byWordWrapping
+        label.lineBreakMode = .byTruncatingTail
         addSubview(label)
     }
 
@@ -145,28 +145,40 @@ final class CountyLabelAnnotationView: MKAnnotationView {
         guard !isHidden else { return }
 
         let name     = (annotation?.title ?? nil) ?? ""
+        let state    = (annotation?.subtitle ?? nil) ?? ""
+        let label_text = state.isEmpty ? name : "\(name), \(state)"
         let fontSize = Self.fontSize(for: span)
 
         // Negative strokeWidth = draw fill (foregroundColor) AND outline (strokeColor).
         let attrs: [NSAttributedString.Key: Any] = [
             .font:            UIFont.systemFont(ofSize: fontSize, weight: .semibold),
-            .foregroundColor: UIColor(white: 0.08, alpha: 0.95),
-            .strokeColor:     UIColor.white,
-            .strokeWidth:     NSNumber(value: -2.5)
+            .foregroundColor: UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 1.0)
         ]
-        label.attributedText = NSAttributedString(string: name, attributes: attrs)
+        label.attributedText = NSAttributedString(string: label_text, attributes: attrs)
+        updateShadow()
         label.sizeToFit()
-
-        // Cap width so long names wrap rather than running into neighbours.
-        let maxWidth = fontSize * 7.0
-        if label.frame.width > maxWidth {
-            label.frame.size.width = maxWidth
-            label.sizeToFit()
-        }
 
         bounds       = label.bounds
         label.frame  = bounds
         centerOffset = .zero
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            updateShadow()
+        }
+    }
+
+    private func updateShadow() {
+        // Resolve systemBackground against the current trait so the halo colour
+        // is white in light mode and near-black in dark mode.
+        let halo = UIColor.systemBackground.resolvedColor(with: traitCollection)
+        label.layer.shadowColor   = halo.cgColor
+        label.layer.shadowOffset  = .zero
+        label.layer.shadowRadius  = 2.5
+        label.layer.shadowOpacity = 0.85
+        label.layer.masksToBounds = false
     }
 
     static func fontSize(for span: Double) -> CGFloat {

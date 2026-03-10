@@ -10,6 +10,7 @@ struct VisitedCountiesView: View {
     @State private var isExporting = false
     @State private var exportDocument = MapChartTextDocument(text: "")
     @State private var alertMessage: String?
+    @State private var resetMapZoom = false
 
     private var palette: GlassPalette {
         GlassPalette(theme: themeSettings)
@@ -26,7 +27,8 @@ struct VisitedCountiesView: View {
 
             VStack(spacing: 12) {
                 VisitedCountyMapView(
-                    visitedKeys: Set(store.visits.map { $0.key })
+                    visitedKeys: Set(store.visits.map { $0.key }),
+                    resetMapZoom: $resetMapZoom
                 )
                 .frame(height: 380)
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -57,6 +59,14 @@ struct VisitedCountiesView: View {
         .navigationTitle("Visited Counties")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    resetMapZoom = true
+                } label: {
+                    Label("Reset Zoom", systemImage: "arrow.uturn.backward.circle")
+                        .labelStyle(.titleAndIcon)
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu("Data") {
                     Button("Import MapChart File") {
@@ -114,9 +124,37 @@ struct VisitedCountiesView: View {
 
 private struct VisitedCountyMapView: UIViewRepresentable {
     let visitedKeys: Set<String>
+    @Binding var resetMapZoom: Bool
+
+    private static let defaultRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 38.5, longitude: -96.0),
+        span: MKCoordinateSpan(latitudeDelta: 28.0, longitudeDelta: 62.0)
+    )
+
+    private static let udCenterLat = "visitedMap.centerLat"
+    private static let udCenterLon = "visitedMap.centerLon"
+    private static let udLatDelta  = "visitedMap.latDelta"
+    private static let udLonDelta  = "visitedMap.lonDelta"
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
+    }
+
+    private func savedRegion() -> MKCoordinateRegion {
+        let ud = UserDefaults.standard
+        guard ud.object(forKey: Self.udCenterLat) != nil else {
+            return Self.defaultRegion
+        }
+        return MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+                latitude:  ud.double(forKey: Self.udCenterLat),
+                longitude: ud.double(forKey: Self.udCenterLon)
+            ),
+            span: MKCoordinateSpan(
+                latitudeDelta:  ud.double(forKey: Self.udLatDelta),
+                longitudeDelta: ud.double(forKey: Self.udLonDelta)
+            )
+        )
     }
 
     func makeUIView(context: Context) -> MKMapView {
@@ -128,13 +166,7 @@ private struct VisitedCountyMapView: UIViewRepresentable {
         mapView.isScrollEnabled = true
         mapView.isRotateEnabled = false
         mapView.isPitchEnabled = false
-        mapView.setRegion(
-            MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: 38.5, longitude: -96.0),
-                span: MKCoordinateSpan(latitudeDelta: 28.0, longitudeDelta: 62.0)
-            ),
-            animated: false
-        )
+        mapView.setRegion(savedRegion(), animated: false)
 
         Task {
             do {
@@ -156,6 +188,11 @@ private struct VisitedCountyMapView: UIViewRepresentable {
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.refreshFillStyles(on: mapView)
+        if resetMapZoom {
+            mapView.setRegion(Self.defaultRegion, animated: true)
+            // Clear the flag after the current update pass
+            DispatchQueue.main.async { context.coordinator.clearReset() }
+        }
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
@@ -165,11 +202,23 @@ private struct VisitedCountyMapView: UIViewRepresentable {
             self.parent = parent
         }
 
+        /// Flips the resetMapZoom binding back to false via the @Binding setter.
+        func clearReset() {
+            parent.resetMapZoom = false
+        }
+
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-            let span = mapView.region.span.latitudeDelta
+            let region = mapView.region
+            let span   = region.span.latitudeDelta
             for ann in mapView.annotations {
                 (mapView.view(for: ann) as? CountyLabelAnnotationView)?.update(span: span)
             }
+            // Persist the current region
+            let ud = UserDefaults.standard
+            ud.set(region.center.latitude,   forKey: VisitedCountyMapView.udCenterLat)
+            ud.set(region.center.longitude,  forKey: VisitedCountyMapView.udCenterLon)
+            ud.set(region.span.latitudeDelta,  forKey: VisitedCountyMapView.udLatDelta)
+            ud.set(region.span.longitudeDelta, forKey: VisitedCountyMapView.udLonDelta)
         }
 
         func refreshFillStyles(on mapView: MKMapView) {

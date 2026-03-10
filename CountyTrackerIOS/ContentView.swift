@@ -127,7 +127,8 @@ struct ContentView: View {
                 }
             }
             .foregroundStyle(palette.primaryText)
-            .navigationTitle("County Tracker")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu("Theme") {
