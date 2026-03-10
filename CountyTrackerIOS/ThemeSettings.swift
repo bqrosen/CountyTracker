@@ -2,6 +2,7 @@ import SwiftUI
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case system
+    case light
     case dark
     case nord
 
@@ -11,6 +12,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
         switch self {
         case .system:
             return "System"
+        case .light:
+            return "Light"
         case .dark:
             return "Dark"
         case .nord:
@@ -42,6 +45,8 @@ final class ThemeSettings: ObservableObject {
         switch selectedTheme {
         case .system:
             return nil
+        case .light:
+            return .light
         case .dark, .nord:
             return .dark
         }
