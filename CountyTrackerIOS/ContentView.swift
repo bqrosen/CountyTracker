@@ -6,6 +6,7 @@ struct ContentView: View {
     @EnvironmentObject private var viewModel: CountyTrackerViewModel
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var store: CountyTrackerStore
+    @EnvironmentObject private var themeSettings: ThemeSettings
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -42,7 +43,7 @@ struct ContentView: View {
 
                     Text("Permission: \(permissionText(locationService.authorizationStatus))")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(secondaryTextColor)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -74,22 +75,38 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(visit.displayName)
                             .font(.headline)
+                            .foregroundStyle(primaryTextColor)
                         Text("Visits: \(visit.visitCount)")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(secondaryTextColor)
                         Text("First seen: \(dateFormatter.string(from: visit.firstVisitedAt))")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(secondaryTextColor)
                         Text("Last seen: \(dateFormatter.string(from: visit.lastVisitedAt))")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(secondaryTextColor)
                     }
+                    .listRowBackground(listRowBackgroundColor)
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(listBackgroundColor)
             }
             .padding()
+            .foregroundStyle(primaryTextColor)
+            .background(screenBackgroundColor.ignoresSafeArea())
             .navigationTitle("County Tracker")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu("Theme") {
+                        ForEach(AppTheme.allCases) { theme in
+                                    Button(themeLabel(theme)) {
+                                themeSettings.selectedTheme = theme
+                            }
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Clear") {
                         viewModel.clearData()
@@ -108,13 +125,41 @@ struct ContentView: View {
                 .fontWeight(.bold)
             Text(title)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(secondaryTextColor)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
+        .background(cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
+
+    private var screenBackgroundColor: Color {
+        themeSettings.isNord ? themeSettings.nordBackground : Color(.systemBackground)
+    }
+
+    private var listBackgroundColor: Color {
+        themeSettings.isNord ? themeSettings.nordSecondaryBackground : Color(.systemBackground)
+    }
+
+    private var listRowBackgroundColor: Color {
+        themeSettings.isNord ? themeSettings.nordCardBackground : Color(.secondarySystemBackground)
+    }
+
+    private var cardBackground: Color {
+        themeSettings.isNord ? themeSettings.nordCardBackground : Color(.secondarySystemBackground)
+    }
+
+    private var primaryTextColor: Color {
+        themeSettings.isNord ? themeSettings.nordPrimaryText : .primary
+    }
+
+    private var secondaryTextColor: Color {
+        themeSettings.isNord ? themeSettings.nordSecondaryText : .secondary
+    }
+
+        private func themeLabel(_ theme: AppTheme) -> String {
+            themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
+        }
 
     private func permissionText(_ status: CLAuthorizationStatus) -> String {
         switch status {
