@@ -24,33 +24,40 @@ final class CountyTrackerStore: ObservableObject {
             return
         }
 
-        let countyName = normalizeCountyName(rawCounty)
-        let lookupKey = "\(countryCode)-\(stateCode)-\(countyName)".lowercased()
+        let countyName = CountyNameNormalizer.normalizedCountyName(rawCounty)
+        upsertVisit(countyName: countyName, stateCode: stateCode, countryCode: countryCode, timestamp: timestamp, incrementVisitCount: true)
+    }
 
-        if let index = visits.firstIndex(where: { $0.key == lookupKey }) {
-            visits[index].lastVisitedAt = timestamp
-            visits[index].visitCount += 1
-        } else {
-            visits.append(
-                CountyVisit(
-                    countyName: countyName,
-                    stateCode: stateCode,
-                    countryCode: countryCode,
-                    firstVisitedAt: timestamp,
-                    lastVisitedAt: timestamp,
-                    visitCount: 1
-                )
+    func importMapChartText(_ text: String) throws -> Int {
+        let save = try MapChartSave.fromText(text)
+        let uniquePaths = Set(save.allPaths)
+        let timestamp = Date()
+
+        var added = 0
+        for path in uniquePaths {
+            guard let parsed = MapChartPath.parse(path) else { continue }
+            let countyName = CountyNameNormalizer.normalizedCountyName(parsed.countyName)
+            let didAdd = upsertVisit(
+                countyName: countyName,
+                stateCode: parsed.stateCode,
+                countryCode: "US",
+                timestamp: timestamp,
+                incrementVisitCount: false
             )
-        }
-
-        visits.sort {
-            if $0.stateCode == $1.stateCode {
-                return $0.countyName < $1.countyName
+            if didAdd {
+                added += 1
             }
-            return $0.stateCode < $1.stateCode
         }
 
-        persist()
+        return added
+    }
+
+    func exportMapChartText() throws -> String {
+        let paths = visits
+            .filter { $0.countryCode.uppercased() == "US" }
+            .map { MapChartPath.build(countyName: $0.countyName, stateCode: $0.stateCode) }
+
+        return try MapChartSave.fromCountyPaths(paths).toText()
     }
 
     func clearAll() {
@@ -70,9 +77,45 @@ final class CountyTrackerStore: ObservableObject {
         Set(visits.map(\.stateCode)).count
     }
 
-    private func normalizeCountyName(_ value: String) -> String {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.replacingOccurrences(of: " County", with: "")
+    @discardableResult
+    private func upsertVisit(
+        countyName: String,
+        stateCode: String,
+        countryCode: String,
+        timestamp: Date,
+        incrementVisitCount: Bool
+    ) -> Bool {
+        let lookupKey = CountyNameNormalizer.countyKey(countryCode: countryCode, stateCode: stateCode, countyName: countyName)
+
+        if let index = visits.firstIndex(where: { $0.key == lookupKey }) {
+            visits[index].lastVisitedAt = timestamp
+            if incrementVisitCount {
+                visits[index].visitCount += 1
+            }
+            persist()
+            return false
+        }
+
+        visits.append(
+            CountyVisit(
+                countyName: countyName,
+                stateCode: stateCode,
+                countryCode: countryCode,
+                firstVisitedAt: timestamp,
+                lastVisitedAt: timestamp,
+                visitCount: 1
+            )
+        )
+
+        visits.sort {
+            if $0.stateCode == $1.stateCode {
+                return $0.countyName < $1.countyName
+            }
+            return $0.stateCode < $1.stateCode
+        }
+
+        persist()
+        return true
     }
 
     private func persist() {
