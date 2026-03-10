@@ -28,7 +28,7 @@ struct CountyVisit: Codable, Identifiable, Hashable {
     }
 
     var key: String {
-        "\(countryCode)-\(stateCode)-\(countyName)".lowercased()
+        CountyNameNormalizer.countyKey(countryCode: countryCode, stateCode: stateCode, countyName: countyName)
     }
 
     var displayName: String {
