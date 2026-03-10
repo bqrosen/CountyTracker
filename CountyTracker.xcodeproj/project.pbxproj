@@ -119,6 +119,7 @@
 				TargetAttributes = {
 					5AED0852EF1EB248AB9EA9D9 = {
 						DevelopmentTeam = CLGKHJH2MY;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -183,6 +184,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CLGKHJH2MY;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CountyTrackerIOS/Info.plist;
@@ -320,6 +322,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CLGKHJH2MY;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CountyTrackerIOS/Info.plist;
