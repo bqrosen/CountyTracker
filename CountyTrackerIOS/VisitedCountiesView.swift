@@ -122,7 +122,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
                 renderer.fillColor   = isVisited
-                    ? UIColor(red: 191.0/255.0, green: 97.0/255.0, blue: 106.0/255.0, alpha: 0.35)
+                    ? UIColor(red: 191.0/255.0, green: 97.0/255.0, blue: 106.0/255.0, alpha: 0.60)
                     : UIColor.clear
                 renderer.strokeColor = UIColor(red: 191.0/255.0, green: 97.0/255.0, blue: 106.0/255.0, alpha: 0.85)
                 renderer.lineWidth   = 1.5
