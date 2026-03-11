@@ -36,10 +36,16 @@ struct ContentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .glassCard(palette, cornerRadius: 22)
 
-                        HStack(spacing: 10) {
+                        HStack {
                             statCard("Counties", value: "\(store.totalUniqueCounties)")
-                            statCard("States", value: "\(store.totalStatesVisited)")
-                            statCard("Visits", value: "\(store.totalVisits)")
+                            Spacer()
+                            Button {
+                                viewModel.resetMapRegion()
+                            } label: {
+                                Image(systemName: "arrow.uturn.backward.circle")
+                                    .font(.title2)
+                            }
+                            .buttonStyle(.bordered)
                         }
 
                         VStack(alignment: .leading, spacing: 8) {
@@ -141,19 +147,10 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack {
-                        Button {
-                            viewModel.resetMapRegion()
-                        } label: {
-                            Label("Reset Zoom", systemImage: "arrow.uturn.backward.circle")
-                                .labelStyle(.titleAndIcon)
-                        }
-
-                        Button("Clear") {
-                            viewModel.clearData()
-                        }
-                        .disabled(store.visits.isEmpty)
+                    Button("Clear") {
+                        viewModel.clearData()
                     }
+                    .disabled(store.visits.isEmpty)
                 }
             }
         }
