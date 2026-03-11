@@ -15,12 +15,19 @@ final class CountyTrackerStore: ObservableObject {
         guard let countryCode = placemark.isoCountryCode?.uppercased(), countryCode == "US" else {
             return
         }
+        guard let stateCode = placemark.administrativeArea?.uppercased() else { return }
 
-        guard
-            let rawCounty = placemark.subAdministrativeArea?.trimmingCharacters(in: .whitespacesAndNewlines),
-            !rawCounty.isEmpty,
-            let stateCode = placemark.administrativeArea?.uppercased()
-        else {
+        let rawCounty: String
+        if let sub = placemark.subAdministrativeArea?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !sub.isEmpty {
+            // Normal county/parish/borough — strip suffix as usual
+            rawCounty = sub
+        } else if let city = placemark.locality?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !city.isEmpty {
+            // Independent city (e.g. St. Louis City, VA independent cities)
+            // Append " city" so the key matches the GeoJSON LSAD="city" polygons
+            rawCounty = "\(city) city"
+        } else {
             return
         }
 
