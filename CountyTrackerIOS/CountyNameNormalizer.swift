@@ -1,10 +1,37 @@
 import Foundation
 
 enum CountyNameNormalizer {
+    /// (normalized name, 2-letter state code) pairs where both an independent
+    /// city AND a county with the same name exist in the same state.
+    static let cityCountyCollisions: Set<CityCollision> = [
+        CityCollision("st louis", "MO"),
+        CityCollision("baltimore", "MD"),
+        CityCollision("fairfax",   "VA"),
+        CityCollision("bedford",   "VA"),
+        CityCollision("franklin",  "VA"),
+        CityCollision("richmond",  "VA"),
+        CityCollision("roanoke",   "VA"),
+    ]
+
+    struct CityCollision: Hashable {
+        let name: String  // already normalized (lowercase, no suffix)
+        let state: String // 2-letter uppercase
+        init(_ name: String, _ state: String) {
+            self.name = name
+            self.state = state
+        }
+    }
+
+    /// MapChart stores DC as "Washington, DC" but the GeoJSON names it
+    /// "District of Columbia".  Map any unrecognised DC name to the canonical form.
+    static func canonicalizeDC(name: String, state: String) -> String {
+        guard state.uppercased() == "DC" else { return name }
+        return "District of Columbia"
+    }
     static func normalizedCountyName(_ value: String) -> String {
         var text = value.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let suffixes = [" County", " Parish", " Borough", " Census Area", " Municipality"]
+        let suffixes = [" County", " Parish", " Borough", " Census Area", " Municipality", " Co"]
         for suffix in suffixes {
             if text.lowercased().hasSuffix(suffix.lowercased()) {
                 text = String(text.dropLast(suffix.count))

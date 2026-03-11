@@ -89,6 +89,23 @@ actor CountyBoundaryLoader {
         let objects = try MKGeoJSONDecoder().decode(data)
         print("CountyBoundaryLoader: decoded \(objects.count) GeoJSON objects")
 
+        // First pass: find (name.lowercased, stusab) pairs that have BOTH a city and a
+        // county-type entry — only those need disambiguation via " city" suffix.
+        var nameStateCounts: [String: Int] = [:]
+        for object in objects {
+            guard
+                let feature   = object as? MKGeoJSONFeature,
+                let propsData = feature.properties,
+                let props     = try? JSONSerialization.jsonObject(with: propsData) as? [String: Any],
+                let name      = props["NAME"]   as? String,
+                let stusab    = props["STUSAB"] as? String
+            else { continue }
+            let pairKey = "\(name.lowercased())|\(stusab.lowercased())"
+            nameStateCounts[pairKey, default: 0] += 1
+        }
+        let collisions: Set<String> = Set(nameStateCounts.filter { $0.value > 1 }.keys)
+
+        // Second pass: build polygon records, appending " city" only for true collisions.
         var result: [PolygonRecord] = []
         for object in objects {
             guard
@@ -100,9 +117,9 @@ actor CountyBoundaryLoader {
             else { continue }
 
             let lsad = (props["LSAD"] as? String ?? "").lowercased()
-            // Independent cities (LSAD="city") that share a name with a county
-            // get " city" appended so their keys are unique.
-            let countyName = lsad == "city" ? "\(name) city" : name
+            let pairKey = "\(name.lowercased())|\(stusab.lowercased())"
+            // Only append " city" when there is a genuine name collision in the same state.
+            let countyName = (lsad == "city" && collisions.contains(pairKey)) ? "\(name) city" : name
 
             let key = CountyNameNormalizer.countyKey(
                 countryCode: "US",

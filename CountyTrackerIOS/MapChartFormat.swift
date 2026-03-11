@@ -2,13 +2,18 @@ import Foundation
 
 struct MapChartSave: Codable {
     var groups: [String: MapChartGroup]
-    var title: String
-    var hidden: [String]
-    var background: String
-    var borders: String
+    var title: String?
+    var hidden: [String]?
+    var background: String?
+    var borders: String?
 
     static func fromText(_ text: String) throws -> MapChartSave {
-        let data = Data(text.utf8)
+        // Strip leading BOM or whitespace
+        let stripped = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\u{FEFF}", with: "")
+        guard let data = stripped.data(using: .utf8) else {
+            throw CocoaError(.fileReadInapplicableStringEncoding)
+        }
         return try JSONDecoder().decode(MapChartSave.self, from: data)
     }
 
@@ -26,7 +31,7 @@ struct MapChartSave: Codable {
     static func fromCountyPaths(_ paths: [String]) -> MapChartSave {
         MapChartSave(
             groups: [
-                "#cc3333": MapChartGroup(div: "#box1", label: "", paths: paths.sorted())
+                "#cc3333": MapChartGroup(div: nil, label: "", paths: paths.sorted())
             ],
             title: "",
             hidden: [],
@@ -37,21 +42,51 @@ struct MapChartSave: Codable {
 }
 
 struct MapChartGroup: Codable {
-    var div: String
+    var div: String?
     var label: String
     var paths: [String]
 }
 
 enum MapChartPath {
+    /// Extract (countyName, stateCode) from a MapChart path token.
+    /// Uses a regex to find the `__XX` state code suffix so that county
+    /// names containing `__` (e.g. `St__Louis__MO`) are handled correctly.
     static func parse(_ value: String) -> (countyName: String, stateCode: String)? {
-        let parts = value.components(separatedBy: "__")
-        guard parts.count == 2 else { return nil }
+        let s = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !s.isEmpty else { return nil }
 
-        let token = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
-        let state = parts[1].trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        // Match the last __ followed by exactly 2 uppercase letters at end of string
+        guard let range = s.range(of: #"__([A-Z]{2})$"#, options: .regularExpression) else {
+            return nil
+        }
+        let stateCode = String(s[range].dropFirst(2)) // drop leading "__"
+        let token = String(s[s.startIndex ..< range.lowerBound])
+        guard token.count >= 1, stateCode.count == 2 else { return nil }
 
-        guard !token.isEmpty, state.count == 2 else { return nil }
-        return (CountyNameNormalizer.countyName(fromMapChartToken: token), state)
+        // Convert token to county name: collapse all underscore runs to a single space
+        let raw = token.replacingOccurrences(of: #"_+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Check if the raw token explicitly carries a " Co" suffix (MapChart's way
+        // of marking the county side of a name collision, e.g. "St Louis Co" vs "St Louis").
+        let hasCoSuffix = raw.lowercased().hasSuffix(" co")
+
+        var name = CountyNameNormalizer.normalizedCountyName(raw) // strips " co", " county" etc.
+        guard !name.isEmpty else { return nil }
+
+        // DC: MapChart uses "Washington" but GeoJSON uses "District of Columbia"
+        name = CountyNameNormalizer.canonicalizeDC(name: name, state: stateCode)
+
+        // For collision pairs (same name exists as both city and county in the same state),
+        // if there is NO explicit " Co" suffix this is the city variant.
+        if !hasCoSuffix {
+            let collision = CountyNameNormalizer.CityCollision(name.lowercased(), stateCode.uppercased())
+            if CountyNameNormalizer.cityCountyCollisions.contains(collision) {
+                name = name + " city"
+            }
+        }
+
+        return (name, stateCode)
     }
 
     static func build(countyName: String, stateCode: String) -> String {

@@ -24,9 +24,19 @@ final class CountyTrackerStore: ObservableObject {
             rawCounty = sub
         } else if let city = placemark.locality?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !city.isEmpty {
-            // Independent city (e.g. St. Louis City, VA independent cities)
-            // Append " city" so the key matches the GeoJSON LSAD="city" polygons
-            rawCounty = "\(city) city"
+            // Independent city or DC — derive the county-equivalent name
+            let normalized = CountyNameNormalizer.normalizedCountyName(city)
+            let dcName = CountyNameNormalizer.canonicalizeDC(name: normalized, state: stateCode)
+            if dcName != normalized {
+                // DC: use canonical GeoJSON name
+                rawCounty = dcName
+            } else {
+                // Check if this is a city/county collision — if so, mark as city
+                let collision = CountyNameNormalizer.CityCollision(normalized.lowercased(), stateCode.uppercased())
+                rawCounty = CountyNameNormalizer.cityCountyCollisions.contains(collision)
+                    ? city + " city"
+                    : city
+            }
         } else {
             return
         }
