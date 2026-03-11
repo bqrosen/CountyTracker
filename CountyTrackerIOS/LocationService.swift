@@ -13,6 +13,8 @@ final class LocationService: NSObject, ObservableObject {
 
     private let manager = CLLocationManager()
     private static let trackingKey = "locationService.isTracking"
+    /// Set when we want to upgrade to Always as soon as When In Use is granted.
+    private var pendingAlwaysUpgrade = false
 
     override init() {
         super.init()
@@ -32,7 +34,18 @@ final class LocationService: NSObject, ObservableObject {
     }
 
     func requestAlwaysPermission() {
-        manager.requestAlwaysAuthorization()
+        switch authorizationStatus {
+        case .notDetermined:
+            // iOS won't show Always directly from notDetermined.
+            // Request When In Use first; the delegate will upgrade to Always.
+            pendingAlwaysUpgrade = true
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse:
+            // Already have When In Use — ask to upgrade.
+            manager.requestAlwaysAuthorization()
+        default:
+            break
+        }
     }
 
     func startTracking() {
@@ -108,12 +121,26 @@ extension LocationService: CLLocationManagerDelegate {
         authorizationStatus = manager.authorizationStatus
 
         switch authorizationStatus {
-        case .authorizedAlways, .authorizedWhenInUse:
+        case .authorizedWhenInUse:
             errorMessage = nil
+            // Upgrade to Always if the onboarding requested it
+            if pendingAlwaysUpgrade {
+                pendingAlwaysUpgrade = false
+                manager.requestAlwaysAuthorization()
+                return
+            }
             if isTracking {
                 startLocationUpdates()
             } else if UserDefaults.standard.bool(forKey: Self.trackingKey) {
-                // Permission was granted; complete the deferred startTracking()
+                isTracking = true
+                startLocationUpdates()
+            }
+        case .authorizedAlways:
+            errorMessage = nil
+            pendingAlwaysUpgrade = false
+            if isTracking {
+                startLocationUpdates()
+            } else if UserDefaults.standard.bool(forKey: Self.trackingKey) {
                 isTracking = true
                 startLocationUpdates()
             }
