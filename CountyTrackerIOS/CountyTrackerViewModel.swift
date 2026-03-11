@@ -53,6 +53,9 @@ final class CountyTrackerViewModel: ObservableObject {
 
     func clearData() {
         store.clearAll()
+        lastResolvedLocation = nil
+        lastResolvedAt = nil
+        currentCountyLabel = "No county yet"
     }
 
     func resetMapRegion() {

@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var exportDocument = MapChartTextDocument(text: "")
     @State private var alertMessage: String?
     @State private var resetMapZoom = false
+    @State private var confirmClearData = false
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -42,13 +43,14 @@ struct ContentView: View {
                     VStack(spacing: 14) {
                         VisitedCountyMapView(
                             visitedKeys: Set(store.visits.map { $0.key }),
+                            userLocation: locationService.lastLocation?.coordinate,
                             resetMapZoom: $resetMapZoom
                         )
                             .frame(height: 255)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .glassCard(palette, cornerRadius: 22)
 
-                        HStack {
+                        HStack(spacing: 8) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Counties")
                                     .font(.caption)
@@ -61,6 +63,39 @@ struct ContentView: View {
                                     .fontWeight(.bold)
                             }
                             Spacer()
+                            Menu("Theme") {
+                                ForEach(AppTheme.allCases) { theme in
+                                    Button(themeLabel(theme)) {
+                                        themeSettings.selectedTheme = theme
+                                    }
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            Menu {
+                                Button("Import MapChart File") {
+                                    isImporting = true
+                                }
+                                Button("Export MapChart File") {
+                                    do {
+                                        exportDocument = MapChartTextDocument(text: try store.exportMapChartText())
+                                        isExporting = true
+                                    } catch {
+                                        alertMessage = "Export failed: \(error.localizedDescription)"
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.title2)
+                            }
+                            .buttonStyle(.bordered)
+                            Button {
+                                confirmClearData = true
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.title2)
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(store.visits.isEmpty)
                             Button {
                                 resetMapZoom = true
                             } label: {
@@ -202,38 +237,11 @@ struct ContentView: View {
             }, message: {
                 Text(alertMessage ?? "")
             })
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu("Theme") {
-                        ForEach(AppTheme.allCases) { theme in
-                            Button(themeLabel(theme)) {
-                                themeSettings.selectedTheme = theme
-                            }
-                        }
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack {
-                        Menu("Data") {
-                            Button("Import MapChart File") {
-                                isImporting = true
-                            }
-                            Button("Export MapChart File") {
-                                do {
-                                    exportDocument = MapChartTextDocument(text: try store.exportMapChartText())
-                                    isExporting = true
-                                } catch {
-                                    alertMessage = "Export failed: \(error.localizedDescription)"
-                                }
-                            }
-                        }
-                        Button("Clear") {
-                            viewModel.clearData()
-                        }
-                        .disabled(store.visits.isEmpty)
-                    }
-                }
+            .alert("Clear All Data?", isPresented: $confirmClearData) {
+                Button("Clear Data", role: .destructive) { viewModel.clearData() }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will permanently delete all \(store.totalUniqueCounties) visited counties. This cannot be undone.")
             }
         }
     }
