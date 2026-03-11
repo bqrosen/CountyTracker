@@ -12,6 +12,7 @@ final class LocationService: NSObject, ObservableObject {
     var onLocationUpdate: ((CLLocation) -> Void)?
 
     private let manager = CLLocationManager()
+    private static let trackingKey = "locationService.isTracking"
 
     override init() {
         super.init()
@@ -19,18 +20,18 @@ final class LocationService: NSObject, ObservableObject {
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
         manager.distanceFilter = 150
         manager.pausesLocationUpdatesAutomatically = true
+        // Required for significant-change wakeup and background delivery
+        manager.allowsBackgroundLocationUpdates = true
         authorizationStatus = manager.authorizationStatus
-    }
 
-    func requestWhenInUsePermission() {
-        manager.requestWhenInUseAuthorization()
+        // If tracking was active before the app was killed or relaunched by iOS,
+        // resume without re-prompting the user.
+        if UserDefaults.standard.bool(forKey: Self.trackingKey) {
+            resumeTracking()
+        }
     }
 
     func requestAlwaysPermission() {
-        if authorizationStatus == .notDetermined {
-            manager.requestWhenInUseAuthorization()
-            return
-        }
         manager.requestAlwaysAuthorization()
     }
 
@@ -40,9 +41,17 @@ final class LocationService: NSObject, ObservableObject {
             return
         }
 
+        // First-time: ask for Always so background wakeup works.
+        // If the user only grants When In Use, significant-change still fires
+        // while the app is in the foreground / suspended (but not after a kill).
         if authorizationStatus == .notDetermined {
-            requestWhenInUsePermission()
+            requestAlwaysPermission()
             return
+        }
+
+        if authorizationStatus == .authorizedWhenInUse {
+            // Prompt upgrade to Always for full background support
+            manager.requestAlwaysAuthorization()
         }
 
         guard authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways else {
@@ -52,12 +61,37 @@ final class LocationService: NSObject, ObservableObject {
 
         errorMessage = nil
         isTracking = true
-        manager.startUpdatingLocation()
+        UserDefaults.standard.set(true, forKey: Self.trackingKey)
+        startLocationUpdates()
     }
 
     func stopTracking() {
         isTracking = false
+        UserDefaults.standard.set(false, forKey: Self.trackingKey)
         manager.stopUpdatingLocation()
+        manager.stopMonitoringSignificantLocationChanges()
+    }
+
+    // MARK: - Private
+
+    /// Restarts location updates after an iOS-initiated relaunch (no permission prompts).
+    private func resumeTracking() {
+        guard authorizationStatus == .authorizedAlways ||
+              authorizationStatus == .authorizedWhenInUse else { return }
+        isTracking = true
+        startLocationUpdates()
+    }
+
+    /// Starts both modes:
+    /// - Significant location changes: cell/WiFi based, ~500 m, near-zero battery,
+    ///   works while app is suspended or killed (iOS relaunches the app).
+    ///   Requires "Always" permission for post-kill relaunch.
+    /// - Standard updates: GPS, 100 m accuracy, used while app is in the foreground.
+    private func startLocationUpdates() {
+        if CLLocationManager.significantLocationChangeMonitoringAvailable() {
+            manager.startMonitoringSignificantLocationChanges()
+        }
+        manager.startUpdatingLocation()
     }
 
     func openAppSettings() {
@@ -73,11 +107,22 @@ extension LocationService: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
 
-        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
+        switch authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
             errorMessage = nil
             if isTracking {
-                manager.startUpdatingLocation()
+                startLocationUpdates()
+            } else if UserDefaults.standard.bool(forKey: Self.trackingKey) {
+                // Permission was granted; complete the deferred startTracking()
+                isTracking = true
+                startLocationUpdates()
             }
+        case .denied, .restricted:
+            errorMessage = "Location permission denied. Enable it in Settings > Privacy & Security > Location Services."
+            isTracking = false
+            UserDefaults.standard.set(false, forKey: Self.trackingKey)
+        default:
+            break
         }
     }
 
