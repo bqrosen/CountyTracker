@@ -2,129 +2,9 @@ import SwiftUI
 import MapKit
 import UniformTypeIdentifiers
 
-struct VisitedCountiesView: View {
-    @EnvironmentObject private var store: CountyTrackerStore
-    @EnvironmentObject private var themeSettings: ThemeSettings
+// MARK: - Visited county map (used on main screen)
 
-    @State private var isImporting = false
-    @State private var isExporting = false
-    @State private var exportDocument = MapChartTextDocument(text: "")
-    @State private var alertMessage: String?
-    @State private var resetMapZoom = false
-
-    private var palette: GlassPalette {
-        GlassPalette(theme: themeSettings)
-    }
-
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [palette.backgroundGradientTop, palette.backgroundGradientBottom],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
-            VStack(spacing: 12) {
-                VisitedCountyMapView(
-                    visitedKeys: Set(store.visits.map { $0.key }),
-                    resetMapZoom: $resetMapZoom
-                )
-                .frame(height: 380)
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .glassCard(palette, cornerRadius: 22)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Counties Colored")
-                        .font(.headline)
-
-                    List(store.visits) { visit in
-                        HStack {
-                            Text(visit.displayName)
-                            Spacer()
-                            Text("\(visit.visitCount)")
-                                .foregroundStyle(palette.secondaryText)
-                        }
-                        .listRowBackground(palette.rowFill)
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                }
-                .padding(14)
-                .glassCard(palette)
-            }
-            .padding()
-        }
-        .foregroundStyle(palette.primaryText)
-        .navigationTitle("Visited Counties")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    resetMapZoom = true
-                } label: {
-                    Label("Reset Zoom", systemImage: "arrow.uturn.backward.circle")
-                        .labelStyle(.titleAndIcon)
-                }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu("Data") {
-                    Button("Import MapChart File") {
-                        isImporting = true
-                    }
-
-                    Button("Export MapChart File") {
-                        do {
-                            exportDocument = MapChartTextDocument(text: try store.exportMapChartText())
-                            isExporting = true
-                        } catch {
-                            alertMessage = "Export failed: \(error.localizedDescription)"
-                        }
-                    }
-                }
-            }
-        }
-        .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [.plainText, .json],
-            allowsMultipleSelection: false
-        ) { result in
-            do {
-                guard let url = try result.get().first else { return }
-                let accessing = url.startAccessingSecurityScopedResource()
-                defer { if accessing { url.stopAccessingSecurityScopedResource() } }
-                let data = try Data(contentsOf: url)
-                let text = String(decoding: data, as: UTF8.self)
-                let added = try store.importMapChartText(text)
-                alertMessage = "Imported \(added) new counties from MapChart file."
-            } catch {
-                alertMessage = "Import failed: \(error.localizedDescription)"
-            }
-        }
-        .fileExporter(
-            isPresented: $isExporting,
-            document: exportDocument,
-            contentType: .plainText,
-            defaultFilename: "mapchartSave__usa_counties__-1"
-        ) { result in
-            switch result {
-            case .success:
-                alertMessage = "MapChart export saved."
-            case .failure(let error):
-                alertMessage = "Export failed: \(error.localizedDescription)"
-            }
-        }
-        .alert("MapChart Data", isPresented: .constant(alertMessage != nil), actions: {
-            Button("OK") {
-                alertMessage = nil
-            }
-        }, message: {
-            Text(alertMessage ?? "")
-        })
-    }
-}
-
-private struct VisitedCountyMapView: UIViewRepresentable {
+struct VisitedCountyMapView: UIViewRepresentable {
     let visitedKeys: Set<String>
     @Binding var resetMapZoom: Bool
 
@@ -262,7 +142,7 @@ private struct VisitedCountyMapView: UIViewRepresentable {
     }
 }
 
-private struct MapChartTextDocument: FileDocument {
+struct MapChartTextDocument: FileDocument {
     static var readableContentTypes: [UTType]  { [.plainText, .json] }
     static var writableContentTypes: [UTType]  { [.plainText] }
 
