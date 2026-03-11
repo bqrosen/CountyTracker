@@ -8,6 +8,8 @@ struct ContentView: View {
     @EnvironmentObject private var store: CountyTrackerStore
     @EnvironmentObject private var themeSettings: ThemeSettings
 
+    @AppStorage("hasSeenLocationOnboarding") private var hasSeenOnboarding = false
+
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -37,7 +39,17 @@ struct ContentView: View {
                             .glassCard(palette, cornerRadius: 22)
 
                         HStack {
-                            statCard("Counties", value: "\(store.totalUniqueCounties)")
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Counties")
+                                    .font(.caption)
+                                    .foregroundStyle(palette.secondaryText)
+                                let total = 3244
+                                let visited = store.totalUniqueCounties
+                                let pct = total > 0 ? Int((Double(visited) / Double(total) * 100).rounded()) : 0
+                                Text("\(visited)/\(total.formatted())  \(pct)%")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                            }
                             Spacer()
                             Button {
                                 viewModel.resetMapRegion()
@@ -135,6 +147,20 @@ struct ContentView: View {
             .foregroundStyle(palette.primaryText)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: Binding(
+                get: { !hasSeenOnboarding },
+                set: { if !$0 { hasSeenOnboarding = true } }
+            )) {
+                LocationOnboardingView(
+                    onAllow: {
+                        hasSeenOnboarding = true
+                        locationService.requestAlwaysPermission()
+                    },
+                    onDismiss: {
+                        hasSeenOnboarding = true
+                    }
+                )
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu("Theme") {
@@ -156,21 +182,6 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
-    private func statCard(_ title: String, value: String) -> some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(palette.secondaryText)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .glassCard(palette, cornerRadius: 16)
-    }
-
     private func themeLabel(_ theme: AppTheme) -> String {
         themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
     }
@@ -190,5 +201,60 @@ struct ContentView: View {
         @unknown default:
             return "Unknown"
         }
+    }
+}
+
+// MARK: - Location onboarding sheet
+
+private struct LocationOnboardingView: View {
+    let onAllow: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 28) {
+            Spacer()
+
+            Image(systemName: "location.circle.fill")
+                .font(.system(size: 72))
+                .foregroundStyle(.tint)
+
+            VStack(spacing: 12) {
+                Text("Background County Tracking")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .multilineTextAlignment(.center)
+
+                Text("""
+CountyTracker can automatically record counties as you travel — even when the app is closed.
+
+It uses **Significant Location Change** monitoring, which relies on cell towers and Wi-Fi rather than GPS. This means your battery is barely affected between location updates.
+
+Your location data never leaves your device.
+""")
+                    .font(.body)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 28)
+
+            Spacer()
+
+            Button(action: onAllow) {
+                Text("Enable Background Tracking")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.horizontal, 28)
+
+            Button("Not Now") {
+                onDismiss()
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .padding(.bottom, 20)
+        }
+        .interactiveDismissDisabled(true)
     }
 }
