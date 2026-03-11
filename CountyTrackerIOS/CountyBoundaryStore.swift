@@ -65,6 +65,9 @@ actor CountyBoundaryLoader {
 
     private var polygonRecords: [PolygonRecord]?
     private var annotationRecords: [AnnotationRecord]?
+    private var usBorderPolygon: MKPolygon?
+    
+    static let USBorderKey = "_us_border"
 
     // MARK: Polygons
 
@@ -182,6 +185,109 @@ actor CountyBoundaryLoader {
 
         print("CountyBoundaryLoader: cached \(result.count) annotation records")
         return result
+    }
+
+    // MARK: US Border
+
+    /// Returns a polygon representing the approximate US national border,
+    /// computed from county boundaries. Styled with theme colors.
+    func loadUSBorder() async throws -> MKPolygon {
+        if let cached = usBorderPolygon {
+            return cached
+        }
+
+        // Load all polygons to extract boundary
+        let polygons = try await loadPolygons()
+        
+        // Compute approximate border by finding outer boundary points
+        // For simplicity, we'll use a simplified convex approach: collect all exterior points
+        // and filter to those on the boundary (points that don't have nearby neighbors in other polygons)
+        var allBoundarySegments: [(CLLocationCoordinate2D, CLLocationCoordinate2D)] = []
+        
+        for polygon in polygons {
+            // Get exterior ring points
+            var coords = [CLLocationCoordinate2D](repeating: .init(), count: polygon.pointCount)
+            polygon.getCoordinates(&coords, range: NSRange(location: 0, length: polygon.pointCount))
+            
+            // Add each edge as a segment
+            for i in 0..<coords.count - 1 {
+                allBoundarySegments.append((coords[i], coords[i + 1]))
+            }
+        }
+        
+        // Find segments that appear only once (shared boundaries appear twice, border appears once)
+        var segmentCounts: [String: Int] = [:]
+        var segmentMap: [String: (CLLocationCoordinate2D, CLLocationCoordinate2D)] = [:]
+        
+        for (p1, p2) in allBoundarySegments {
+            // Normalize segment key (same segment counts whether forward or backward)
+            let key1 = "\(p1.latitude),\(p1.longitude),\(p2.latitude),\(p2.longitude)"
+            let key2 = "\(p2.latitude),\(p2.longitude),\(p1.latitude),\(p1.longitude)"
+            
+            if segmentCounts[key1] == nil && segmentCounts[key2] == nil {
+                segmentCounts[key1] = 1
+                segmentMap[key1] = (p1, p2)
+            } else if segmentCounts[key1] != nil {
+                segmentCounts[key1]! += 1
+            } else {
+                segmentCounts[key2]! += 1
+            }
+        }
+        
+        // Extract border segments (appear exactly once)
+        var borderSegments: [(CLLocationCoordinate2D, CLLocationCoordinate2D)] = []
+        for (key, count) in segmentCounts {
+            if count == 1, let segment = segmentMap[key] {
+                borderSegments.append(segment)
+            }
+        }
+        
+        // Chain segments into continuous border rings
+        var borderCoordinates: [CLLocationCoordinate2D] = []
+        var usedSegments = Set<String>()
+        
+        if !borderSegments.isEmpty {
+            // Start with first segment
+            var current = borderSegments[0]
+            borderCoordinates.append(current.0)
+            
+            let segmentKey = "\(current.0.latitude),\(current.0.longitude),\(current.1.latitude),\(current.1.longitude)"
+            usedSegments.insert(segmentKey)
+            
+            // Chain remaining segments
+            while usedSegments.count < borderSegments.count {
+                let lastPoint = borderCoordinates.last!
+                var foundNext = false
+                
+                for segment in borderSegments {
+                    let key = "\(segment.0.latitude),\(segment.0.longitude),\(segment.1.latitude),\(segment.1.longitude)"
+                    if usedSegments.contains(key) { continue }
+                    
+                    if segment.0 == lastPoint {
+                        borderCoordinates.append(segment.1)
+                        usedSegments.insert(key)
+                        foundNext = true
+                        break
+                    } else if segment.1 == lastPoint {
+                        borderCoordinates.append(segment.0)
+                        usedSegments.insert(key)
+                        foundNext = true
+                        break
+                    }
+                }
+                
+                if !foundNext { break }
+            }
+        }
+        
+        // Create polygon from border coordinates
+        var coords = borderCoordinates
+        let polygon = MKPolygon(coordinates: &coords, count: coords.count)
+        polygon.title = Self.USBorderKey
+        
+        usBorderPolygon = polygon
+        print("CountyBoundaryLoader: created US border polygon with \(coords.count) points")
+        return polygon
     }
 }
 

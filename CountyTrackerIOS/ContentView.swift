@@ -2,6 +2,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 import UniformTypeIdentifiers
+import Photos
 
 struct ContentView: View {
     @EnvironmentObject private var viewModel: CountyTrackerViewModel
@@ -17,6 +18,9 @@ struct ContentView: View {
     @State private var alertMessage: String?
     @State private var resetMapZoom = false
     @State private var confirmClearData = false
+    @State private var mapCoordinator: VisitedCountyMapView.Coordinator?
+    @State private var mapSnapshot: UIImage?
+    @State private var isShareSheetPresented = false
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -45,7 +49,10 @@ struct ContentView: View {
                             visitedKeys: Set(store.visits.map { $0.key }),
                             userLocation: locationService.lastLocation?.coordinate,
                             resetMapZoom: $resetMapZoom,
-                            theme: themeSettings.selectedTheme
+                            theme: themeSettings.selectedTheme,
+                            onCoordinatorReady: { coordinator in
+                                mapCoordinator = coordinator
+                            }
                         )
                             .frame(height: 360)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -83,6 +90,9 @@ struct ContentView: View {
                                     } catch {
                                         alertMessage = "Export failed: \(error.localizedDescription)"
                                     }
+                                }
+                                Button("Save Map to Photos") {
+                                    exportMapToPhotos()
                                 }
                             } label: {
                                 Image(systemName: "square.and.arrow.up")
@@ -251,6 +261,43 @@ struct ContentView: View {
 
     private func themeLabel(_ theme: AppTheme) -> String {
         themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
+    }
+
+    private func exportMapToPhotos() {
+        guard let coordinator = mapCoordinator else {
+            alertMessage = "Map not ready"
+            return
+        }
+        
+        coordinator.requestSnapshot { snapshot in
+            DispatchQueue.main.async {
+                guard let image = snapshot else {
+                    self.alertMessage = "Failed to capture map"
+                    return
+                }
+                
+                PHPhotoLibrary.requestAuthorization { status in
+                    DispatchQueue.main.async {
+                        guard status == .authorized || status == .limited else {
+                            self.alertMessage = "Photos access denied. Enable in Settings to save maps."
+                            return
+                        }
+                        
+                        PHPhotoLibrary.shared().performChanges({
+                            PHAssetChangeRequest.creationRequestForAsset(from: image)
+                        }) { success, error in
+                            DispatchQueue.main.async {
+                                if success {
+                                    self.alertMessage = "Map saved to Photos"
+                                } else {
+                                    self.alertMessage = "Failed to save map: \(error?.localizedDescription ?? "Unknown error")"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 

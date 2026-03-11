@@ -25,8 +25,10 @@ struct CountyBoundaryMapView: UIViewRepresentable {
             do {
                 async let polys = CountyBoundaryLoader.shared.loadPolygons()
                 async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
-                let (polygons, annotations) = try await (polys, anns)
+                async let border = CountyBoundaryLoader.shared.loadUSBorder()
+                let (polygons, annotations, borderPoly) = try await (polys, anns, border)
                 await MainActor.run {
+                    mapView.addOverlay(borderPoly, level: .aboveRoads)
                     mapView.addOverlays(polygons, level: .aboveRoads)
                     mapView.addAnnotations(annotations)
                 }
@@ -68,9 +70,18 @@ struct CountyBoundaryMapView: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
-                renderer.strokeColor = strokeColor.withAlphaComponent(0.85)
-                renderer.lineWidth   = 1.5
-                renderer.fillColor   = .clear
+                
+                // Check if this is the US border
+                if polygon.title == CountyBoundaryLoader.USBorderKey {
+                    renderer.fillColor = .clear
+                    renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
+                    renderer.lineWidth = 2.5  // Slightly thicker than counties
+                } else {
+                    // Regular county rendering
+                    renderer.strokeColor = strokeColor.withAlphaComponent(0.85)
+                    renderer.lineWidth   = 1.5
+                    renderer.fillColor   = .clear
+                }
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
