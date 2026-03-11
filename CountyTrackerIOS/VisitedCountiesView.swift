@@ -17,46 +17,24 @@ struct VisitedCountyMapView: UIViewRepresentable {
         span: MKCoordinateSpan(latitudeDelta: 28.0, longitudeDelta: 62.0)
     )
 
-    private static let udCenterLat = "visitedMap.centerLat"
-    private static let udCenterLon = "visitedMap.centerLon"
-    private static let udLatDelta  = "visitedMap.latDelta"
-    private static let udLonDelta  = "visitedMap.lonDelta"
-
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
-    }
-
-    private func savedRegion() -> MKCoordinateRegion {
-        let ud = UserDefaults.standard
-        guard ud.object(forKey: Self.udCenterLat) != nil else {
-            // No saved region — center on user if available
-            if let coord = userLocation {
-                return MKCoordinateRegion(center: coord, span: Self.localSpan)
-            }
-            return Self.defaultRegion
-        }
-        return MKCoordinateRegion(
-            center: CLLocationCoordinate2D(
-                latitude:  ud.double(forKey: Self.udCenterLat),
-                longitude: ud.double(forKey: Self.udCenterLon)
-            ),
-            span: MKCoordinateSpan(
-                latitudeDelta:  ud.double(forKey: Self.udLatDelta),
-                longitudeDelta: ud.double(forKey: Self.udLonDelta)
-            )
-        )
     }
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
         mapView.delegate = context.coordinator
-        mapView.showsUserLocation = false
+        mapView.showsUserLocation = true
         mapView.pointOfInterestFilter = .excludingAll
         mapView.isZoomEnabled = true
         mapView.isScrollEnabled = true
         mapView.isRotateEnabled = false
         mapView.isPitchEnabled = false
-        mapView.setRegion(savedRegion(), animated: false)
+        // Always start at continental US; will animate to user once location arrives
+        mapView.setRegion(Self.defaultRegion, animated: false)
+
+        // Seed so first updateUIView doesn't trigger an unnecessary reload
+        context.coordinator.lastVisitedKeys = visitedKeys
 
         Task {
             do {
@@ -77,10 +55,18 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.parent = self
-        context.coordinator.refreshFillStyles(on: mapView)
+        // Auto-center on user once per app session as soon as location is available
+        if !context.coordinator.hasCenteredOnOpen, let coord = userLocation {
+            context.coordinator.hasCenteredOnOpen = true
+            mapView.setRegion(MKCoordinateRegion(center: coord, span: VisitedCountyMapView.localSpan), animated: true)
+        }
+        if visitedKeys != context.coordinator.lastVisitedKeys {
+            context.coordinator.lastVisitedKeys = visitedKeys
+            context.coordinator.reloadOverlays(on: mapView)
+        }
         if resetMapZoom {
             let region: MKCoordinateRegion
-            if let coord = parent.userLocation {
+            if let coord = userLocation {
                 region = MKCoordinateRegion(center: coord, span: VisitedCountyMapView.localSpan)
             } else {
                 region = VisitedCountyMapView.defaultRegion
@@ -93,6 +79,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
     final class Coordinator: NSObject, MKMapViewDelegate {
         var parent: VisitedCountyMapView
+        var lastVisitedKeys: Set<String> = []
+        var hasCenteredOnOpen = false
 
         init(_ parent: VisitedCountyMapView) {
             self.parent = parent
@@ -103,41 +91,40 @@ struct VisitedCountyMapView: UIViewRepresentable {
             parent.resetMapZoom = false
         }
 
+        func reloadOverlays(on mapView: MKMapView) {
+            mapView.removeOverlays(mapView.overlays)
+            mapView.removeAnnotations(mapView.annotations.filter { !($0 is MKUserLocation) })
+            Task {
+                do {
+                    async let polys = CountyBoundaryLoader.shared.loadPolygons()
+                    async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
+                    let (polygons, annotations) = try await (polys, anns)
+                    await MainActor.run {
+                        mapView.addOverlays(polygons, level: .aboveRoads)
+                        mapView.addAnnotations(annotations)
+                    }
+                } catch {
+                    print("VisitedCountyMapView: reload failed – \(error)")
+                }
+            }
+        }
+
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-            let region = mapView.region
-            let span   = region.span.latitudeDelta
+            let span = mapView.region.span.latitudeDelta
             for ann in mapView.annotations {
                 (mapView.view(for: ann) as? CountyLabelAnnotationView)?.update(span: span)
             }
-            // Persist the current region
-            let ud = UserDefaults.standard
-            ud.set(region.center.latitude,   forKey: VisitedCountyMapView.udCenterLat)
-            ud.set(region.center.longitude,  forKey: VisitedCountyMapView.udCenterLon)
-            ud.set(region.span.latitudeDelta,  forKey: VisitedCountyMapView.udLatDelta)
-            ud.set(region.span.longitudeDelta, forKey: VisitedCountyMapView.udLonDelta)
         }
 
-        func refreshFillStyles(on mapView: MKMapView) {
-            let visited = parent.visitedKeys
-            for renderer in mapView.overlays.compactMap({ mapView.renderer(for: $0) as? MKPolygonRenderer }) {
-                let isVisited = visited.contains(renderer.polygon.title ?? "")
-                renderer.fillColor = isVisited
-                    ? UIColor.systemBlue.withAlphaComponent(0.38)
-                    : UIColor.clear
-                renderer.strokeColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 0.85)
-                renderer.lineWidth   = 1.5
-                renderer.setNeedsDisplay()
-            }
-        }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
                 renderer.fillColor   = isVisited
-                    ? UIColor.systemBlue.withAlphaComponent(0.38)
+                    ? UIColor(red: 191.0/255.0, green: 97.0/255.0, blue: 106.0/255.0, alpha: 0.35)
                     : UIColor.clear
-                renderer.strokeColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 0.85)
+                renderer.strokeColor = UIColor(red: 191.0/255.0, green: 97.0/255.0, blue: 106.0/255.0, alpha: 0.85)
                 renderer.lineWidth   = 1.5
                 return renderer
             }

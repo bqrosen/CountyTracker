@@ -42,6 +42,13 @@ targets:
           - location
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: MapChart Save File
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.plain-text
+              - public.json
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bqrosen.CountyTracker

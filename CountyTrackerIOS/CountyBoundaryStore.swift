@@ -99,10 +99,15 @@ actor CountyBoundaryLoader {
                 let stusab    = props["STUSAB"] as? String
             else { continue }
 
+            let lsad = (props["LSAD"] as? String ?? "").lowercased()
+            // Independent cities (LSAD="city") that share a name with a county
+            // get " city" appended so their keys are unique.
+            let countyName = lsad == "city" ? "\(name) city" : name
+
             let key = CountyNameNormalizer.countyKey(
                 countryCode: "US",
                 stateCode: stusab,
-                countyName: name
+                countyName: countyName
             )
 
             for geometry in feature.geometry {

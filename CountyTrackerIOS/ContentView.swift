@@ -125,6 +125,7 @@ struct ContentView: View {
                         HStack(spacing: 8) {
                             Button(locationService.isTracking ? "Tracking" : "Start") {
                                 viewModel.startTracking()
+                                resetMapZoom = true
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(palette.accent)

@@ -128,7 +128,14 @@ final class CountyTrackerViewModel: ObservableObject {
                 return
             }
 
-            let county = placemark.subAdministrativeArea ?? "Unknown County"
+            let county: String
+            if let sub = placemark.subAdministrativeArea, !sub.isEmpty {
+                county = sub
+            } else if let city = placemark.locality, !city.isEmpty {
+                county = "\(city) City"
+            } else {
+                county = "Unknown County"
+            }
             let state = placemark.administrativeArea ?? "?"
             currentCountyLabel = "\(county), \(state)"
             store.recordVisit(from: placemark, at: Date())
