@@ -9,6 +9,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
     var userLocation: CLLocationCoordinate2D?
     @Binding var resetMapZoom: Bool
     let theme: AppTheme
+    var onCoordinatorReady: ((Coordinator) -> Void)?
     @EnvironmentObject private var themeSettings: ThemeSettings
 
     // ~50-mile radius span (~0.725° each direction)
@@ -25,6 +26,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
+        context.coordinator.mapView = mapView
         mapView.delegate = context.coordinator
         mapView.showsUserLocation = true
         mapView.pointOfInterestFilter = .excludingAll
@@ -39,12 +41,18 @@ struct VisitedCountyMapView: UIViewRepresentable {
         context.coordinator.lastVisitedKeys = visitedKeys
         context.coordinator.lastTheme = theme
 
+        // Notify parent that coordinator is ready
+        onCoordinatorReady?(context.coordinator)
+
         Task {
             do {
                 async let polys = CountyBoundaryLoader.shared.loadPolygons()
                 async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
-                let (polygons, annotations) = try await (polys, anns)
+                async let border = CountyBoundaryLoader.shared.loadUSBorder()
+                let (polygons, annotations, borderPoly) = try await (polys, anns, border)
                 await MainActor.run {
+                    // Add border first so it renders behind counties
+                    mapView.addOverlay(borderPoly, level: .aboveRoads)
                     mapView.addOverlays(polygons, level: .aboveRoads)
                     mapView.addAnnotations(annotations)
                 }
@@ -85,6 +93,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
     final class Coordinator: NSObject, MKMapViewDelegate {
         var parent: VisitedCountyMapView
+        var mapView: MKMapView?
         var lastVisitedKeys: Set<String> = []
         var lastTheme: AppTheme = .system
         var hasCenteredOnOpen = false
@@ -100,6 +109,30 @@ struct VisitedCountyMapView: UIViewRepresentable {
             parent.resetMapZoom = false
         }
 
+        /// Captures the current map view as a UIImage without the user location indicator.
+        func takeSnapshot(of mapView: MKMapView) -> UIImage? {
+            let wasShowingUserLocation = mapView.showsUserLocation
+            mapView.showsUserLocation = false
+            
+            let renderer = UIGraphicsImageRenderer(size: mapView.bounds.size)
+            let image = renderer.image { _ in
+                mapView.drawHierarchy(in: mapView.bounds, afterScreenUpdates: false)
+            }
+            
+            mapView.showsUserLocation = wasShowingUserLocation
+            return image
+        }
+
+        /// Requests a snapshot from the parent and passes it to the callback.
+        func requestSnapshot(_ completion: @escaping (UIImage?) -> Void) {
+            guard let mapView = mapView else {
+                completion(nil)
+                return
+            }
+            let snapshot = takeSnapshot(of: mapView)
+            completion(snapshot)
+        }
+
         func reloadOverlays(on mapView: MKMapView) {
             mapView.removeOverlays(mapView.overlays)
             mapView.removeAnnotations(mapView.annotations.filter { !($0 is MKUserLocation) })
@@ -107,8 +140,10 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 do {
                     async let polys = CountyBoundaryLoader.shared.loadPolygons()
                     async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
-                    let (polygons, annotations) = try await (polys, anns)
+                    async let border = CountyBoundaryLoader.shared.loadUSBorder()
+                    let (polygons, annotations, borderPoly) = try await (polys, anns, border)
                     await MainActor.run {
+                        mapView.addOverlay(borderPoly, level: .aboveRoads)
                         mapView.addOverlays(polygons, level: .aboveRoads)
                         mapView.addAnnotations(annotations)
                     }
@@ -138,13 +173,22 @@ struct VisitedCountyMapView: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
-                let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
-                let fillColor = UIColor(parent.themeSettings.mapFillColor)
-                renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                // Hide strokes at continental scale (span > 20.0), show only visited fills
-                renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
-                renderer.lineWidth   = 1.5
+                
+                // Check if this is the US border
+                if polygon.title == CountyBoundaryLoader.USBorderKey {
+                    renderer.fillColor = .clear
+                    renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
+                    renderer.lineWidth = 2.5  // Slightly thicker than counties
+                } else {
+                    // Regular county rendering
+                    let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
+                    let fillColor = UIColor(parent.themeSettings.mapFillColor)
+                    renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                    // Hide strokes at continental scale (span > 20.0), show only visited fills
+                    renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
+                    renderer.lineWidth   = 1.5
+                }
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
