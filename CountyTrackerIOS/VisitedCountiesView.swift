@@ -8,6 +8,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
     let visitedKeys: Set<String>
     var userLocation: CLLocationCoordinate2D?
     @Binding var resetMapZoom: Bool
+    let theme: AppTheme
+    @EnvironmentObject private var themeSettings: ThemeSettings
 
     // ~50-mile radius span (~0.725° each direction)
     private static let localSpan = MKCoordinateSpan(latitudeDelta: 1.45, longitudeDelta: 1.45)
@@ -35,6 +37,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
         // Seed so first updateUIView doesn't trigger an unnecessary reload
         context.coordinator.lastVisitedKeys = visitedKeys
+        context.coordinator.lastTheme = theme
 
         Task {
             do {
@@ -63,6 +66,9 @@ struct VisitedCountyMapView: UIViewRepresentable {
         if visitedKeys != context.coordinator.lastVisitedKeys {
             context.coordinator.lastVisitedKeys = visitedKeys
             context.coordinator.reloadOverlays(on: mapView)
+        } else if theme != context.coordinator.lastTheme {
+            context.coordinator.lastTheme = theme
+            context.coordinator.reloadOverlays(on: mapView)
         }
         if resetMapZoom {
             let region: MKCoordinateRegion
@@ -80,6 +86,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var parent: VisitedCountyMapView
         var lastVisitedKeys: Set<String> = []
+        var lastTheme: AppTheme = .system
         var hasCenteredOnOpen = false
 
         init(_ parent: VisitedCountyMapView) {
@@ -121,10 +128,10 @@ struct VisitedCountyMapView: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
-                renderer.fillColor   = isVisited
-                    ? UIColor(red: 191.0/255.0, green: 97.0/255.0, blue: 106.0/255.0, alpha: 0.60)
-                    : UIColor.clear
-                renderer.strokeColor = UIColor(red: 191.0/255.0, green: 97.0/255.0, blue: 106.0/255.0, alpha: 0.85)
+                let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
+                let fillColor = UIColor(parent.themeSettings.mapFillColor)
+                renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                renderer.strokeColor = strokeColor.withAlphaComponent(0.85)
                 renderer.lineWidth   = 1.5
                 return renderer
             }

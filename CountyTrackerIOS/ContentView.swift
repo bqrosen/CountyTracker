@@ -44,7 +44,8 @@ struct ContentView: View {
                         VisitedCountyMapView(
                             visitedKeys: Set(store.visits.map { $0.key }),
                             userLocation: locationService.lastLocation?.coordinate,
-                            resetMapZoom: $resetMapZoom
+                            resetMapZoom: $resetMapZoom,
+                            theme: themeSettings.selectedTheme
                         )
                             .frame(height: 360)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))

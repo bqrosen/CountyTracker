@@ -151,7 +151,7 @@ final class ThemeSettings: ObservableObject {
     }
 
     var outrunSecondaryText: Color {
-        Color(.sRGB, red: 0.753, green: 0.518, blue: 0.988, opacity: 1)
+        Color(.sRGB, red: 0.5, green: 0.8, blue: 1.0, opacity: 1)
     }
 
     var outrunAccent: Color {
@@ -177,7 +177,7 @@ final class ThemeSettings: ObservableObject {
     }
 
     var cyberSecondaryText: Color {
-        Color(.sRGB, red: 0.0, green: 0.831, blue: 1.0, opacity: 1)
+        Color(.sRGB, red: 0.75, green: 0.3, blue: 1.0, opacity: 1)
     }
 
     var cyberAccent: Color {
@@ -234,5 +234,37 @@ final class ThemeSettings: ObservableObject {
 
     var jungleAccent: Color {
         Color(.sRGB, red: 0.243, green: 0.882, blue: 0.365, opacity: 1)
+    }
+
+    // MARK: - Map colors
+
+    var mapStrokeColor: Color {
+        switch selectedTheme {
+        case .light, .dark, .system, .nord, .snow:
+            return Color(.sRGB, red: 191/255, green: 97/255, blue: 106/255, opacity: 1)
+        case .sepia:
+            return sepiaAccent
+        case .outrun:
+            return Color(.sRGB, red: 0.0, green: 0.93, blue: 1.0, opacity: 1)
+        case .cyber:
+            return cyberAccent
+        case .jungle:
+            return jungleAccent
+        }
+    }
+
+    var mapFillColor: Color {
+        switch selectedTheme {
+        case .light, .dark, .system, .nord, .snow:
+            return Color(.sRGB, red: 191/255, green: 97/255, blue: 106/255, opacity: 0.35)
+        case .sepia:
+            return sepiaAccent.opacity(0.30)
+        case .outrun:
+            return Color(.sRGB, red: 0.0, green: 0.93, blue: 1.0, opacity: 0.35)
+        case .cyber:
+            return cyberAccent.opacity(0.35)
+        case .jungle:
+            return jungleAccent.opacity(0.30)
+        }
     }
 }
