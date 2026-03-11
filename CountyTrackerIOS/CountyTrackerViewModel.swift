@@ -7,10 +7,12 @@ final class CountyTrackerViewModel: ObservableObject {
     @Published private(set) var currentCountyLabel: String = "No county yet"
     @Published private(set) var isResolvingCounty = false
 
-    @Published var mapRegion = MKCoordinateRegion(
+    static let defaultRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 39.5, longitude: -98.35),
         span: MKCoordinateSpan(latitudeDelta: 1.45, longitudeDelta: 1.45)
     )
+
+    @Published var mapRegion = CountyTrackerViewModel.defaultRegion
 
     let locationService: LocationService
     let store: CountyTrackerStore
@@ -51,6 +53,11 @@ final class CountyTrackerViewModel: ObservableObject {
 
     func clearData() {
         store.clearAll()
+    }
+
+    func resetMapRegion() {
+        mapRegion = Self.defaultRegion
+        hasCenteredOnUser = false
     }
 
     private func handleLocationUpdate(_ location: CLLocation) async {

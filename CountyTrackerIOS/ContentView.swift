@@ -141,10 +141,19 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Clear") {
-                        viewModel.clearData()
+                    HStack {
+                        Button {
+                            viewModel.resetMapRegion()
+                        } label: {
+                            Label("Reset Zoom", systemImage: "arrow.uturn.backward.circle")
+                                .labelStyle(.titleAndIcon)
+                        }
+
+                        Button("Clear") {
+                            viewModel.clearData()
+                        }
+                        .disabled(store.visits.isEmpty)
                     }
-                    .disabled(store.visits.isEmpty)
                 }
             }
         }
