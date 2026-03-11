@@ -1,6 +1,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject private var viewModel: CountyTrackerViewModel
@@ -9,6 +10,12 @@ struct ContentView: View {
     @EnvironmentObject private var themeSettings: ThemeSettings
 
     @AppStorage("hasSeenLocationOnboarding") private var hasSeenOnboarding = false
+
+    @State private var isImporting = false
+    @State private var isExporting = false
+    @State private var exportDocument = MapChartTextDocument(text: "")
+    @State private var alertMessage: String?
+    @State private var resetMapZoom = false
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -33,7 +40,10 @@ struct ContentView: View {
 
                 ScrollView {
                     VStack(spacing: 14) {
-                        CountyBoundaryMapView(region: $viewModel.mapRegion)
+                        VisitedCountyMapView(
+                            visitedKeys: Set(store.visits.map { $0.key }),
+                            resetMapZoom: $resetMapZoom
+                        )
                             .frame(height: 255)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .glassCard(palette, cornerRadius: 22)
@@ -52,7 +62,7 @@ struct ContentView: View {
                             }
                             Spacer()
                             Button {
-                                viewModel.resetMapRegion()
+                                resetMapZoom = true
                             } label: {
                                 Image(systemName: "arrow.uturn.backward.circle")
                                     .font(.title2)
@@ -72,25 +82,10 @@ struct ContentView: View {
                                     .font(.footnote)
                                     .foregroundStyle(.red)
                             }
-
-                            Text("Permission: \(permissionText(locationService.authorizationStatus))")
-                                .font(.footnote)
-                                .foregroundStyle(palette.secondaryText)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(14)
                         .glassCard(palette)
-
-                        NavigationLink {
-                            VisitedCountiesView()
-                        } label: {
-                            Label("Open Visited Counties Map", systemImage: "map.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(palette.accent)
 
                         HStack(spacing: 8) {
                             Button(locationService.isTracking ? "Tracking" : "Start") {
@@ -112,10 +107,21 @@ struct ContentView: View {
                             .buttonStyle(.bordered)
                         }
 
+                        Button {
+                            // placeholder — tip jar coming soon
+                        } label: {
+                            Label("Support CountyTracker  ☕", systemImage: "heart.fill")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.pink)
+                        .disabled(true)
+
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Visit History")
                                 .font(.headline)
-
                             List(store.visits) { visit in
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(visit.displayName)
@@ -161,6 +167,41 @@ struct ContentView: View {
                     }
                 )
             }
+            .fileImporter(
+                isPresented: $isImporting,
+                allowedContentTypes: [.plainText, .json],
+                allowsMultipleSelection: false
+            ) { result in
+                do {
+                    guard let url = try result.get().first else { return }
+                    let accessing = url.startAccessingSecurityScopedResource()
+                    defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+                    let data = try Data(contentsOf: url)
+                    let text = String(decoding: data, as: UTF8.self)
+                    let added = try store.importMapChartText(text)
+                    alertMessage = "Imported \(added) new counties from MapChart file."
+                } catch {
+                    alertMessage = "Import failed: \(error.localizedDescription)"
+                }
+            }
+            .fileExporter(
+                isPresented: $isExporting,
+                document: exportDocument,
+                contentType: .plainText,
+                defaultFilename: "mapchartSave__usa_counties__-1"
+            ) { result in
+                switch result {
+                case .success:
+                    alertMessage = "MapChart export saved."
+                case .failure(let error):
+                    alertMessage = "Export failed: \(error.localizedDescription)"
+                }
+            }
+            .alert("MapChart Data", isPresented: .constant(alertMessage != nil), actions: {
+                Button("OK") { alertMessage = nil }
+            }, message: {
+                Text(alertMessage ?? "")
+            })
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu("Theme") {
@@ -173,10 +214,25 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Clear") {
-                        viewModel.clearData()
+                    HStack {
+                        Menu("Data") {
+                            Button("Import MapChart File") {
+                                isImporting = true
+                            }
+                            Button("Export MapChart File") {
+                                do {
+                                    exportDocument = MapChartTextDocument(text: try store.exportMapChartText())
+                                    isExporting = true
+                                } catch {
+                                    alertMessage = "Export failed: \(error.localizedDescription)"
+                                }
+                            }
+                        }
+                        Button("Clear") {
+                            viewModel.clearData()
+                        }
+                        .disabled(store.visits.isEmpty)
                     }
-                    .disabled(store.visits.isEmpty)
                 }
             }
         }
@@ -186,22 +242,7 @@ struct ContentView: View {
         themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
     }
 
-    private func permissionText(_ status: CLAuthorizationStatus) -> String {
-        switch status {
-        case .authorizedAlways:
-            return "Always"
-        case .authorizedWhenInUse:
-            return "When In Use"
-        case .denied:
-            return "Denied"
-        case .restricted:
-            return "Restricted"
-        case .notDetermined:
-            return "Not Determined"
-        @unknown default:
-            return "Unknown"
-        }
-    }
+
 }
 
 // MARK: - Location onboarding sheet
@@ -234,6 +275,12 @@ Your location data never leaves your device.
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
+
+                Text("iOS will show two permission prompts. Tap **Allow While Using App** on the first, then **Change to Always Allow** on the second.")
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.primary)
+                    .padding(.top, 4)
             }
             .padding(.horizontal, 28)
 
