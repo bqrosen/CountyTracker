@@ -56,8 +56,15 @@ final class CountyTrackerViewModel: ObservableObject {
     }
 
     func resetMapRegion() {
-        mapRegion = Self.defaultRegion
-        hasCenteredOnUser = false
+        if let location = locationService.lastLocation {
+            mapRegion = MKCoordinateRegion(
+                center: location.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 1.45, longitudeDelta: 1.45)
+            )
+        } else {
+            mapRegion = Self.defaultRegion
+        }
+        hasCenteredOnUser = true
     }
 
     private func handleLocationUpdate(_ location: CLLocation) async {
