@@ -31,7 +31,7 @@ enum CountyNameNormalizer {
     static func normalizedCountyName(_ value: String) -> String {
         var text = value.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let suffixes = [" County", " Parish", " Borough", " Census Area", " Municipality", " Co"]
+        let suffixes = [" County", " Parish", " Borough", " Census Area", " Municipality", " Planning Region", " Co"]
         for suffix in suffixes {
             if text.lowercased().hasSuffix(suffix.lowercased()) {
                 text = String(text.dropLast(suffix.count))
