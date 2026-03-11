@@ -40,6 +40,8 @@ targets:
         NSLocationAlwaysAndWhenInUseUsageDescription: CountyTracker uses your location in the background to automatically record counties as you drive through them — without draining your battery.
         UIBackgroundModes:
           - location
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bqrosen.CountyTracker
