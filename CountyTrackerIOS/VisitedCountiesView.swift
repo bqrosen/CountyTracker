@@ -88,6 +88,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
         var lastVisitedKeys: Set<String> = []
         var lastTheme: AppTheme = .system
         var hasCenteredOnOpen = false
+        var currentSpan: Double = 28.0
+        private var lastStrokeVisibility = true  // true = strokes visible (span <= 7.0)
 
         init(_ parent: VisitedCountyMapView) {
             self.parent = parent
@@ -118,6 +120,15 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             let span = mapView.region.span.latitudeDelta
+            currentSpan = span
+            
+            // Reload overlays when crossing the stroke visibility threshold
+            let shouldShowStrokes = span <= 20.0
+            if shouldShowStrokes != lastStrokeVisibility {
+                lastStrokeVisibility = shouldShowStrokes
+                reloadOverlays(on: mapView)
+            }
+            
             for ann in mapView.annotations {
                 (mapView.view(for: ann) as? CountyLabelAnnotationView)?.update(span: span)
             }
@@ -131,7 +142,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
                 let fillColor = UIColor(parent.themeSettings.mapFillColor)
                 renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                renderer.strokeColor = strokeColor.withAlphaComponent(0.85)
+                // Hide strokes at continental scale (span > 20.0), show only visited fills
+                renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
                 renderer.lineWidth   = 1.5
                 return renderer
             }
@@ -144,6 +156,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
             let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? CountyLabelAnnotationView)
                        ?? CountyLabelAnnotationView(annotation: annotation, reuseIdentifier: id)
             view.annotation = annotation
+            view.setThemeColor(UIColor(parent.themeSettings.mapStrokeColor))
             view.update(span: mapView.region.span.latitudeDelta)
             return view
         }

@@ -200,6 +200,7 @@ final class CountyLabelAnnotationView: MKAnnotationView {
     static let minFontSize:   CGFloat = 7
 
     private let label = UILabel()
+    private var themeColor: UIColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 1.0)
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
@@ -215,6 +216,10 @@ final class CountyLabelAnnotationView: MKAnnotationView {
 
     required init?(coder: NSCoder) { fatalError() }
 
+    func setThemeColor(_ color: UIColor) {
+        themeColor = color
+    }
+
     func update(span: Double) {
         isHidden = span > Self.hideAboveSpan
         guard !isHidden else { return }
@@ -227,7 +232,7 @@ final class CountyLabelAnnotationView: MKAnnotationView {
         // Negative strokeWidth = draw fill (foregroundColor) AND outline (strokeColor).
         let attrs: [NSAttributedString.Key: Any] = [
             .font:            UIFont.systemFont(ofSize: fontSize, weight: .semibold),
-            .foregroundColor: UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 1.0)
+            .foregroundColor: themeColor
         ]
         label.attributedText = NSAttributedString(string: label_text, attributes: attrs)
         updateShadow()
