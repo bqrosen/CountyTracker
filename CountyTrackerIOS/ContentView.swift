@@ -46,7 +46,7 @@ struct ContentView: View {
                             userLocation: locationService.lastLocation?.coordinate,
                             resetMapZoom: $resetMapZoom
                         )
-                            .frame(height: 255)
+                            .frame(height: 360)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .glassCard(palette, cornerRadius: 22)
 
