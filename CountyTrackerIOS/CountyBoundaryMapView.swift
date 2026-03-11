@@ -82,6 +82,7 @@ struct CountyBoundaryMapView: UIViewRepresentable {
             let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? CountyLabelAnnotationView)
                        ?? CountyLabelAnnotationView(annotation: annotation, reuseIdentifier: id)
             view.annotation = annotation
+            view.setThemeColor(UIColor(parent.themeSettings.mapStrokeColor))
             view.update(span: mapView.region.span.latitudeDelta)
             return view
         }
