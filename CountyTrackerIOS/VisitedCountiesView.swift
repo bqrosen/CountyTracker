@@ -6,7 +6,11 @@ import UniformTypeIdentifiers
 
 struct VisitedCountyMapView: UIViewRepresentable {
     let visitedKeys: Set<String>
+    var userLocation: CLLocationCoordinate2D?
     @Binding var resetMapZoom: Bool
+
+    // ~50-mile radius span (~0.725° each direction)
+    private static let localSpan = MKCoordinateSpan(latitudeDelta: 1.45, longitudeDelta: 1.45)
 
     private static let defaultRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 38.5, longitude: -96.0),
@@ -25,6 +29,10 @@ struct VisitedCountyMapView: UIViewRepresentable {
     private func savedRegion() -> MKCoordinateRegion {
         let ud = UserDefaults.standard
         guard ud.object(forKey: Self.udCenterLat) != nil else {
+            // No saved region — center on user if available
+            if let coord = userLocation {
+                return MKCoordinateRegion(center: coord, span: Self.localSpan)
+            }
             return Self.defaultRegion
         }
         return MKCoordinateRegion(
@@ -71,7 +79,13 @@ struct VisitedCountyMapView: UIViewRepresentable {
         context.coordinator.parent = self
         context.coordinator.refreshFillStyles(on: mapView)
         if resetMapZoom {
-            mapView.setRegion(Self.defaultRegion, animated: true)
+            let region: MKCoordinateRegion
+            if let coord = parent.userLocation {
+                region = MKCoordinateRegion(center: coord, span: VisitedCountyMapView.localSpan)
+            } else {
+                region = VisitedCountyMapView.defaultRegion
+            }
+            mapView.setRegion(region, animated: true)
             // Clear the flag after the current update pass
             DispatchQueue.main.async { context.coordinator.clearReset() }
         }
