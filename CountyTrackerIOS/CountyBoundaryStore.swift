@@ -4,26 +4,81 @@ import UIKit
 
 // MARK: - Bundled county boundary loader
 
-/// Loads and caches all US county polygons and centroid annotations from
-/// bundled JSON resources once per session.
-///
-/// The county key for each polygon is stored in `MKPolygon.title`.
-/// MKPolygon uses a class-cluster pattern that prevents safe subclassing,
-/// so we use the built-in `title` property instead of a custom subclass.
+/// Holds the raw coordinate data for one polygon ring, so we can create
+/// fresh MKPolygon instances for each MKMapView that requests them.
+/// (An MKPolygon is a class object that can only be owned by one MKMapView
+/// at a time; reusing the same instance across views causes silent failures.)
+private struct PolygonRecord {
+    let coordinates: [CLLocationCoordinate2D]
+    let interiorRings: [[CLLocationCoordinate2D]]
+    let key: String
+
+    /// Extract coordinates from a parsed MKPolygon so we can recreate it later.
+    init(polygon: MKPolygon, key: String) {
+        var coords = [CLLocationCoordinate2D](repeating: .init(), count: polygon.pointCount)
+        polygon.getCoordinates(&coords, range: NSRange(location: 0, length: polygon.pointCount))
+        self.coordinates = coords
+        self.interiorRings = (polygon.interiorPolygons ?? []).map { ring in
+            var r = [CLLocationCoordinate2D](repeating: .init(), count: ring.pointCount)
+            ring.getCoordinates(&r, range: NSRange(location: 0, length: ring.pointCount))
+            return r
+        }
+        self.key = key
+    }
+
+    func makePolygon() -> MKPolygon {
+        var outer = coordinates
+        let holes = interiorRings.map { ring -> MKPolygon in
+            var r = ring
+            return MKPolygon(coordinates: &r, count: r.count)
+        }
+        let poly = MKPolygon(
+            coordinates: &outer,
+            count: outer.count,
+            interiorPolygons: holes.isEmpty ? nil : holes
+        )
+        poly.title = key
+        return poly
+    }
+}
+
+/// Holds centroid data for one county annotation.
+private struct AnnotationRecord {
+    let coordinate: CLLocationCoordinate2D
+    let name: String
+    let state: String
+
+    func makeAnnotation() -> MKPointAnnotation {
+        let ann = MKPointAnnotation()
+        ann.coordinate = coordinate
+        ann.title      = name
+        ann.subtitle   = state
+        return ann
+    }
+}
+
+/// Parses bundled JSON resources once per session and vends fresh MapKit
+/// objects (MKPolygon / MKPointAnnotation) on every call.
 actor CountyBoundaryLoader {
     static let shared = CountyBoundaryLoader()
     private init() {}
 
-    private var cachedPolygons: [MKPolygon]?
-    private var cachedAnnotations: [MKPointAnnotation]?
+    private var polygonRecords: [PolygonRecord]?
+    private var annotationRecords: [AnnotationRecord]?
 
     // MARK: Polygons
 
-    /// Returns all ~3,200 US county polygons, loading from bundle on first call.
+    /// Returns freshly created MKPolygon instances for all ~3,200 US counties.
     /// Each polygon's `title` is set to its county key.
+    /// Parses the JSON only once; subsequent calls create new instances from cached data.
     func loadPolygons() async throws -> [MKPolygon] {
-        if let cached = cachedPolygons { return cached }
+        if polygonRecords == nil {
+            polygonRecords = try await parsePolygonRecords()
+        }
+        return polygonRecords!.map { $0.makePolygon() }
+    }
 
+    private func parsePolygonRecords() async throws -> [PolygonRecord] {
         guard let url = Bundle.main.url(forResource: "counties", withExtension: "json") else {
             print("CountyBoundaryLoader: counties.json NOT found in bundle")
             throw CocoaError(.fileNoSuchFile)
@@ -34,7 +89,7 @@ actor CountyBoundaryLoader {
         let objects = try MKGeoJSONDecoder().decode(data)
         print("CountyBoundaryLoader: decoded \(objects.count) GeoJSON objects")
 
-        var result: [MKPolygon] = []
+        var result: [PolygonRecord] = []
         for object in objects {
             guard
                 let feature   = object as? MKGeoJSONFeature,
@@ -52,31 +107,30 @@ actor CountyBoundaryLoader {
 
             for geometry in feature.geometry {
                 if let polygon = geometry as? MKPolygon {
-                    polygon.title = key
-                    result.append(polygon)
+                    result.append(PolygonRecord(polygon: polygon, key: key))
                 } else if let multi = geometry as? MKMultiPolygon {
                     for polygon in multi.polygons {
-                        polygon.title = key
-                        result.append(polygon)
+                        result.append(PolygonRecord(polygon: polygon, key: key))
                     }
                 }
             }
         }
 
-        print("CountyBoundaryLoader: produced \(result.count) MKPolygon overlays")
-        cachedPolygons = result
+        print("CountyBoundaryLoader: cached \(result.count) polygon records")
         return result
     }
 
     // MARK: Centroid annotations
 
-    /// Returns one `MKPointAnnotation` per county with:
-    ///   • `coordinate` = pre-computed centroid
-    ///   • `title`      = display name  (e.g. "Los Angeles")
-    ///   • `subtitle`   = state code    (e.g. "CA")
+    /// Returns freshly created MKPointAnnotation instances for all county centroids.
     func loadAnnotations() async throws -> [MKPointAnnotation] {
-        if let cached = cachedAnnotations { return cached }
+        if annotationRecords == nil {
+            annotationRecords = try await parseAnnotationRecords()
+        }
+        return annotationRecords!.map { $0.makeAnnotation() }
+    }
 
+    private func parseAnnotationRecords() async throws -> [AnnotationRecord] {
         guard let url = Bundle.main.url(forResource: "county_centroids", withExtension: "json") else {
             print("CountyBoundaryLoader: county_centroids.json NOT found in bundle")
             throw CocoaError(.fileNoSuchFile)
@@ -88,7 +142,7 @@ actor CountyBoundaryLoader {
             throw CocoaError(.fileReadCorruptFile)
         }
 
-        var result: [MKPointAnnotation] = []
+        var result: [AnnotationRecord] = []
         for (_, info) in dict {
             guard
                 let lat   = info["lat"]   as? Double,
@@ -97,15 +151,14 @@ actor CountyBoundaryLoader {
                 let state = info["state"] as? String
             else { continue }
 
-            let ann        = MKPointAnnotation()
-            ann.coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            ann.title      = name
-            ann.subtitle   = state
-            result.append(ann)
+            result.append(AnnotationRecord(
+                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                name: name,
+                state: state
+            ))
         }
 
-        print("CountyBoundaryLoader: loaded \(result.count) centroid annotations")
-        cachedAnnotations = result
+        print("CountyBoundaryLoader: cached \(result.count) annotation records")
         return result
     }
 }

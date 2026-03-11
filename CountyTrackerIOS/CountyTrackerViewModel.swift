@@ -33,7 +33,7 @@ final class CountyTrackerViewModel: ObservableObject {
     }
 
     func requestPermission() {
-        locationService.requestWhenInUsePermission()
+        locationService.requestAlwaysPermission()
     }
 
     func requestAlwaysPermission() {
