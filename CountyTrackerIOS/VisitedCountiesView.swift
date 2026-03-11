@@ -91,6 +91,8 @@ struct VisitedCountiesView: View {
         ) { result in
             do {
                 guard let url = try result.get().first else { return }
+                let accessing = url.startAccessingSecurityScopedResource()
+                defer { if accessing { url.stopAccessingSecurityScopedResource() } }
                 let data = try Data(contentsOf: url)
                 let text = String(decoding: data, as: UTF8.self)
                 let added = try store.importMapChartText(text)
@@ -261,7 +263,8 @@ private struct VisitedCountyMapView: UIViewRepresentable {
 }
 
 private struct MapChartTextDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.plainText, .json] }
+    static var readableContentTypes: [UTType]  { [.plainText, .json] }
+    static var writableContentTypes: [UTType]  { [.plainText] }
 
     var text: String
 
