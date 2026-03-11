@@ -12,7 +12,8 @@ struct GlassPalette {
 
     @MainActor
     init(theme: ThemeSettings) {
-        if theme.isNord {
+        switch theme.selectedTheme {
+        case .nord:
             primaryText = theme.nordPrimaryText
             secondaryText = theme.nordSecondaryText
             accent = theme.nordAccent
@@ -21,7 +22,52 @@ struct GlassPalette {
             cardFill = AnyShapeStyle(theme.nordCardBackground.opacity(0.72))
             cardStroke = theme.nordAccent.opacity(0.35)
             rowFill = theme.nordCardBackground.opacity(0.9)
-        } else {
+        case .sepia:
+            primaryText = theme.sepiaPrimaryText
+            secondaryText = theme.sepiaSecondaryText
+            accent = theme.sepiaAccent
+            backgroundGradientTop = theme.sepiaBackground
+            backgroundGradientBottom = theme.sepiaSecondaryBackground
+            cardFill = AnyShapeStyle(theme.sepiaCardBackground.opacity(0.80))
+            cardStroke = theme.sepiaAccent.opacity(0.30)
+            rowFill = theme.sepiaCardBackground.opacity(0.85)
+        case .outrun:
+            primaryText = theme.outrunPrimaryText
+            secondaryText = theme.outrunSecondaryText
+            accent = theme.outrunAccent
+            backgroundGradientTop = theme.outrunBackground
+            backgroundGradientBottom = theme.outrunSecondaryBackground
+            cardFill = AnyShapeStyle(theme.outrunCardBackground.opacity(0.80))
+            cardStroke = theme.outrunAccent.opacity(0.50)
+            rowFill = theme.outrunCardBackground.opacity(0.9)
+        case .cyber:
+            primaryText = theme.cyberPrimaryText
+            secondaryText = theme.cyberSecondaryText
+            accent = theme.cyberAccent
+            backgroundGradientTop = theme.cyberBackground
+            backgroundGradientBottom = theme.cyberSecondaryBackground
+            cardFill = AnyShapeStyle(theme.cyberCardBackground.opacity(0.85))
+            cardStroke = theme.cyberAccent.opacity(0.50)
+            rowFill = theme.cyberCardBackground.opacity(0.9)
+        case .snow:
+            primaryText = theme.snowPrimaryText
+            secondaryText = theme.snowSecondaryText
+            accent = theme.snowAccent
+            backgroundGradientTop = theme.snowBackground
+            backgroundGradientBottom = theme.snowSecondaryBackground
+            cardFill = AnyShapeStyle(theme.snowCardBackground.opacity(0.80))
+            cardStroke = theme.snowAccent.opacity(0.35)
+            rowFill = theme.snowCardBackground.opacity(0.9)
+        case .jungle:
+            primaryText = theme.junglePrimaryText
+            secondaryText = theme.jungleSecondaryText
+            accent = theme.jungleAccent
+            backgroundGradientTop = theme.jungleBackground
+            backgroundGradientBottom = theme.jungleSecondaryBackground
+            cardFill = AnyShapeStyle(theme.jungleCardBackground.opacity(0.82))
+            cardStroke = theme.jungleAccent.opacity(0.40)
+            rowFill = theme.jungleCardBackground.opacity(0.9)
+        default:
             primaryText = .primary
             secondaryText = .secondary
             accent = .blue

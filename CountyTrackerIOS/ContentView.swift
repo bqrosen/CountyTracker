@@ -89,14 +89,6 @@ struct ContentView: View {
                             }
                             .buttonStyle(.bordered)
                             Button {
-                                confirmClearData = true
-                            } label: {
-                                Image(systemName: "trash")
-                                    .font(.title2)
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(store.visits.isEmpty)
-                            Button {
                                 resetMapZoom = true
                             } label: {
                                 Image(systemName: "arrow.uturn.backward.circle")
@@ -141,6 +133,15 @@ struct ContentView: View {
                                 locationService.openAppSettings()
                             }
                             .buttonStyle(.bordered)
+
+                            Button {
+                                confirmClearData = true
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.title2)
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(store.visits.isEmpty)
                         }
 
                         Button {
