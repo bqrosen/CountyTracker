@@ -271,7 +271,9 @@ struct ContentView: View {
         
         coordinator.requestSnapshot { snapshot in
             guard let image = snapshot else {
-                self.alertMessage = "Failed to capture map"
+                DispatchQueue.main.async {
+                    self.alertMessage = "Failed to capture map"
+                }
                 return
             }
             

@@ -124,12 +124,16 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
         /// Requests a snapshot from the parent and passes it to the callback.
         func requestSnapshot(_ completion: @escaping (UIImage?) -> Void) {
-            guard let mapView = mapView else {
-                completion(nil)
-                return
+            DispatchQueue.main.async {
+                guard let mapView = self.mapView,
+                      mapView.bounds.width > 1,
+                      mapView.bounds.height > 1 else {
+                    completion(nil)
+                    return
+                }
+                let snapshot = self.takeSnapshot(of: mapView)
+                completion(snapshot)
             }
-            let snapshot = takeSnapshot(of: mapView)
-            completion(snapshot)
         }
 
         func reloadOverlays(on mapView: MKMapView) {
