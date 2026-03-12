@@ -16,6 +16,9 @@ struct ContentView: View {
     @AppStorage("hasCompletedSupportPurchase") private var hasCompletedSupportPurchase = false
 
     @State private var isImporting = false
+    @State private var isImportInProgress = false
+    @State private var importProgress: Double = 0
+    @State private var importStatusMessage = ""
     @State private var isExporting = false
     @State private var exportDocument = MapChartTextDocument(text: "")
     @State private var alertMessage: String?
@@ -222,6 +225,28 @@ struct ContentView: View {
                         .allowsHitTesting(false)
                 }
             }
+            .overlay {
+                if isImportInProgress {
+                    ZStack {
+                        Color.black.opacity(0.15)
+                            .ignoresSafeArea()
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Importing MapChart File")
+                                .font(.headline)
+                            ProgressView(value: importProgress, total: 1.0)
+                                .progressViewStyle(.linear)
+                            Text(importStatusMessage)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(14)
+                        .frame(maxWidth: 320)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .allowsHitTesting(true)
+                }
+            }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: Binding(
@@ -251,16 +276,14 @@ struct ContentView: View {
                 allowedContentTypes: [.plainText, .json],
                 allowsMultipleSelection: false
             ) { result in
-                do {
-                    guard let url = try result.get().first else { return }
-                    let accessing = url.startAccessingSecurityScopedResource()
-                    defer { if accessing { url.stopAccessingSecurityScopedResource() } }
-                    let data = try Data(contentsOf: url)
-                    let text = String(decoding: data, as: UTF8.self)
-                    let added = try store.importMapChartText(text)
-                    alertMessage = "Imported \(added) new counties from MapChart file."
-                } catch {
-                    alertMessage = "Import failed: \(error.localizedDescription)"
+                Task {
+                    do {
+                        guard let url = try result.get().first else { return }
+                        try await importMapChartFile(from: url)
+                    } catch {
+                        alertMessage = "Import failed: \(error.localizedDescription)"
+                        isImportInProgress = false
+                    }
                 }
             }
             .fileExporter(
@@ -335,6 +358,80 @@ struct ContentView: View {
                 }
             }
         }
+    }
+
+    private func importMapChartFile(from url: URL) async throws {
+        await MainActor.run {
+            isImportInProgress = true
+            importProgress = 0.0
+            importStatusMessage = "Preparing file..."
+        }
+
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessing { url.stopAccessingSecurityScopedResource() }
+        }
+
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        let fileSize = (attributes[.size] as? NSNumber)?.int64Value ?? 0
+
+        let data: Data
+        if fileSize > 0 {
+            data = try readDataWithProgress(from: url, expectedSize: fileSize)
+        } else {
+            data = try Data(contentsOf: url)
+            await MainActor.run {
+                importProgress = 0.65
+                importStatusMessage = "Processing data..."
+            }
+        }
+
+        let text = String(decoding: data, as: UTF8.self)
+
+        await MainActor.run {
+            importProgress = 0.85
+            importStatusMessage = "Importing counties..."
+        }
+
+        let added = try await MainActor.run {
+            try store.importMapChartText(text)
+        }
+
+        await MainActor.run {
+            importProgress = 1.0
+            importStatusMessage = "Done"
+            alertMessage = "Imported \(added) new counties from MapChart file."
+        }
+
+        try? await Task.sleep(nanoseconds: 180_000_000)
+        await MainActor.run {
+            isImportInProgress = false
+        }
+    }
+
+    private func readDataWithProgress(from url: URL, expectedSize: Int64) throws -> Data {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+
+        let chunkSize = 64 * 1024
+        var collected = Data()
+        var bytesRead: Int64 = 0
+
+        while true {
+            let chunk = try handle.read(upToCount: chunkSize) ?? Data()
+            if chunk.isEmpty { break }
+            collected.append(chunk)
+            bytesRead += Int64(chunk.count)
+
+            let ratio = min(max(Double(bytesRead) / Double(expectedSize), 0), 1)
+            let mappedProgress = 0.05 + (ratio * 0.60)
+            Task { @MainActor in
+                importProgress = mappedProgress
+                importStatusMessage = "Reading file..."
+            }
+        }
+
+        return collected
     }
 
     private func startQuickTutorialIfNeeded() {
