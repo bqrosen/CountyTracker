@@ -30,6 +30,8 @@
 	<string>CountyTracker uses your location to record counties you've visited.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>CountyTracker saves map snapshots to your Photos library.</string>
+	<key>SupportTipJarURL</key>
+	<string></string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
