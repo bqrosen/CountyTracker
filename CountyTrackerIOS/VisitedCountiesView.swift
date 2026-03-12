@@ -204,6 +204,20 @@ struct VisitedCountyMapView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if annotation is MKUserLocation {
+                let id = "UserBlueDot"
+                let view = mapView.dequeueReusableAnnotationView(withIdentifier: id)
+                    ?? MKAnnotationView(annotation: annotation, reuseIdentifier: id)
+                view.annotation = annotation
+                view.canShowCallout = false
+                view.isEnabled = false
+                view.bounds = CGRect(x: 0, y: 0, width: 16, height: 16)
+                view.backgroundColor = .systemBlue
+                view.layer.cornerRadius = 8
+                view.layer.borderWidth = 2
+                view.layer.borderColor = UIColor.white.cgColor
+                return view
+            }
             guard annotation is MKPointAnnotation else { return nil }
             let id   = "CountyLabel"
             let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? CountyLabelAnnotationView)
