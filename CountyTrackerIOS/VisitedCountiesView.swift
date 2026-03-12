@@ -111,13 +111,19 @@ struct VisitedCountyMapView: UIViewRepresentable {
         /// Captures the current map view as a UIImage without the user location indicator.
         func takeSnapshot(of mapView: MKMapView) -> UIImage? {
             let wasShowingUserLocation = mapView.showsUserLocation
+            let userLocationView = mapView.view(for: mapView.userLocation)
+            let wasUserLocationViewHidden = userLocationView?.isHidden ?? false
+
             mapView.showsUserLocation = false
+            userLocationView?.isHidden = true
+            mapView.layoutIfNeeded()
             
             let renderer = UIGraphicsImageRenderer(size: mapView.bounds.size)
             let image = renderer.image { _ in
-                mapView.drawHierarchy(in: mapView.bounds, afterScreenUpdates: false)
+                mapView.drawHierarchy(in: mapView.bounds, afterScreenUpdates: true)
             }
             
+            userLocationView?.isHidden = wasUserLocationViewHidden
             mapView.showsUserLocation = wasShowingUserLocation
             return image
         }
