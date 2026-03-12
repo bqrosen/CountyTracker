@@ -167,7 +167,6 @@ struct ContentView: View {
                                 .padding(.vertical, 12)
                         }
                         .buttonStyle(.bordered)
-                        .tint(.pink)
 
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Visit History")
