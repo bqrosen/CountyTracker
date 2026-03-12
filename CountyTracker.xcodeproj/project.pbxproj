@@ -12,7 +12,6 @@
 		12F0B9AA5E3DC0D472236051 /* MapChartFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */; };
 		1391379775B654A856F7AF09 /* county_centroids.json in Resources */ = {isa = PBXBuildFile; fileRef = D424748F3E548E45F4BE6AF9 /* county_centroids.json */; };
 		2AEBC015CE05DF2AC7E4E286 /* us_border.geojson in Resources */ = {isa = PBXBuildFile; fileRef = 619B03B12614F22C9C50AEA4 /* us_border.geojson */; };
-		5CEF72F48A1BA1858160720D /* CountyBoundaryMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */; };
 		5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */; };
 		663F058556FBCA6A40BBCC46 /* CountyBoundaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24CE36C33BF9EE8F2D2F811 /* CountyBoundaryStore.swift */; };
 		714873175BB7CA8DD71F6405 /* CountyTrackerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */; };
@@ -28,7 +27,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyBoundaryMapView.swift; sourceTree = "<group>"; };
 		16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerViewModel.swift; sourceTree = "<group>"; };
 		2A90ABC78841EC3EFAD5411C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3809E092438F109F06C0A53A /* CountyTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CountyTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,7 +64,6 @@
 				2A90ABC78841EC3EFAD5411C /* ContentView.swift */,
 				B5B74288FD2DDC198AB0EF4B /* counties.json */,
 				D424748F3E548E45F4BE6AF9 /* county_centroids.json */,
-				162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */,
 				C24CE36C33BF9EE8F2D2F811 /* CountyBoundaryStore.swift */,
 				67F6C5E7FDB3A4A0F2453B72 /* CountyNameNormalizer.swift */,
 				5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */,
@@ -168,7 +165,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */,
-				5CEF72F48A1BA1858160720D /* CountyBoundaryMapView.swift in Sources */,
 				663F058556FBCA6A40BBCC46 /* CountyBoundaryStore.swift in Sources */,
 				C31CAC3967B26A160D5E037D /* CountyNameNormalizer.swift in Sources */,
 				5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */,
