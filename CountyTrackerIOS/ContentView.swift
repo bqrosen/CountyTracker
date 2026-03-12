@@ -280,7 +280,7 @@ struct ContentView: View {
             PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                 guard status == .authorized else {
                     DispatchQueue.main.async {
-                        self.alertMessage = "Photos access denied. Enable in Settings to save maps."
+                        self.alertMessage = "Photos permission is off. In Settings → Privacy & Security → Photos → CountyTracker, choose ‘Add Photos Only’."
                     }
                     return
                 }
