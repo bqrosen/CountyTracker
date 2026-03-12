@@ -269,29 +269,31 @@ struct ContentView: View {
             return
         }
         
-        coordinator.requestSnapshot { snapshot in
-            DispatchQueue.main.async {
-                guard let image = snapshot else {
-                    self.alertMessage = "Failed to capture map"
-                    return
+        coordinator.requestSnapshot { [weak self] snapshot in
+            guard let self = self, let image = snapshot else {
+                DispatchQueue.main.async {
+                    self?.alertMessage = "Failed to capture map"
                 }
-                
-                PHPhotoLibrary.requestAuthorization { status in
-                    DispatchQueue.main.async {
-                        guard status == .authorized || status == .limited else {
-                            self.alertMessage = "Photos access denied. Enable in Settings to save maps."
-                            return
-                        }
-                        
-                        PHPhotoLibrary.shared().performChanges({
-                            PHAssetChangeRequest.creationRequestForAsset(from: image)
-                        }) { success, error in
-                            DispatchQueue.main.async {
-                                if success {
-                                    self.alertMessage = "Map saved to Photos"
-                                } else {
-                                    self.alertMessage = "Failed to save map: \(error?.localizedDescription ?? "Unknown error")"
-                                }
+                return
+            }
+            
+            PHPhotoLibrary.requestAuthorization { [weak self] status in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    guard status == .authorized || status == .limited else {
+                        self.alertMessage = "Photos access denied. Enable in Settings to save maps."
+                        return
+                    }
+                    
+                    PHPhotoLibrary.shared().performChanges({
+                        PHAssetChangeRequest.creationRequestForAsset(from: image)
+                    }) { [weak self] success, error in
+                        DispatchQueue.main.async {
+                            guard let self = self else { return }
+                            if success {
+                                self.alertMessage = "Map saved to Photos"
+                            } else {
+                                self.alertMessage = "Failed to save map: \(error?.localizedDescription ?? "Unknown error")"
                             }
                         }
                     }
