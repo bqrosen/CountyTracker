@@ -11,6 +11,7 @@
 		0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A90ABC78841EC3EFAD5411C /* ContentView.swift */; };
 		12F0B9AA5E3DC0D472236051 /* MapChartFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */; };
 		1391379775B654A856F7AF09 /* county_centroids.json in Resources */ = {isa = PBXBuildFile; fileRef = D424748F3E548E45F4BE6AF9 /* county_centroids.json */; };
+		2AEBC015CE05DF2AC7E4E286 /* us_border.geojson in Resources */ = {isa = PBXBuildFile; fileRef = 619B03B12614F22C9C50AEA4 /* us_border.geojson */; };
 		5CEF72F48A1BA1858160720D /* CountyBoundaryMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */; };
 		5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */; };
 		663F058556FBCA6A40BBCC46 /* CountyBoundaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24CE36C33BF9EE8F2D2F811 /* CountyBoundaryStore.swift */; };
@@ -29,9 +30,10 @@
 		162DF3AC027D2A895DE0CEB7 /* CountyBoundaryMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyBoundaryMapView.swift; sourceTree = "<group>"; };
 		16EB0F24F9B6BCC0FD10D7E2 /* CountyTrackerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerViewModel.swift; sourceTree = "<group>"; };
 		2A90ABC78841EC3EFAD5411C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		3809E092438F109F06C0A53A /* CountyTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CountyTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3809E092438F109F06C0A53A /* CountyTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CountyTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerApp.swift; sourceTree = "<group>"; };
 		5B4AAE4CF9B6737560973B52 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		619B03B12614F22C9C50AEA4 /* us_border.geojson */ = {isa = PBXFileReference; path = us_border.geojson; sourceTree = "<group>"; };
 		67F6C5E7FDB3A4A0F2453B72 /* CountyNameNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyNameNormalizer.swift; sourceTree = "<group>"; };
 		6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapChartFormat.swift; sourceTree = "<group>"; };
 		8C898E9CD52AC834CA19A557 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 				CA0EE401C8012ADB838AA44E /* LocationService.swift */,
 				6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */,
 				ADE1C7CB1F99C4743A5A6988 /* ThemeSettings.swift */,
+				619B03B12614F22C9C50AEA4 /* us_border.geojson */,
 				D1C60FBCDFBAC3434844898C /* VisitedCountiesView.swift */,
 			);
 			path = CountyTrackerIOS;
@@ -118,6 +121,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					5AED0852EF1EB248AB9EA9D9 = {
+						DevelopmentTeam = CLGKHJH2MY;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -149,6 +153,7 @@
 				CB00CF196360AEC64DA78C4C /* Assets.xcassets in Resources */,
 				A0C130040B53B20C4FEFBE1F /* counties.json in Resources */,
 				1391379775B654A856F7AF09 /* county_centroids.json in Resources */,
+				2AEBC015CE05DF2AC7E4E286 /* us_border.geojson in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -184,7 +189,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = XX58YX2C6Y;
+				DEVELOPMENT_TEAM = CLGKHJH2MY;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CountyTrackerIOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -322,7 +327,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = XX58YX2C6Y;
+				DEVELOPMENT_TEAM = CLGKHJH2MY;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CountyTrackerIOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
