@@ -346,6 +346,7 @@ private struct TipJarSheet: View {
                                 .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.borderedProminent)
+                            .tint(.pink)
                             .disabled(isPurchasing)
                         }
                     }
