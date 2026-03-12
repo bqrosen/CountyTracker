@@ -3,13 +3,13 @@ import MapKit
 import CoreLocation
 import UniformTypeIdentifiers
 import Photos
+import StoreKit
 
 struct ContentView: View {
     @EnvironmentObject private var viewModel: CountyTrackerViewModel
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var store: CountyTrackerStore
     @EnvironmentObject private var themeSettings: ThemeSettings
-    @Environment(\.openURL) private var openURL
 
     @AppStorage("hasSeenLocationOnboarding") private var hasSeenOnboarding = false
 
@@ -22,6 +22,8 @@ struct ContentView: View {
     @State private var mapCoordinator: VisitedCountyMapView.Coordinator?
     @State private var mapSnapshot: UIImage?
     @State private var isShareSheetPresented = false
+    @State private var isTipJarPresented = false
+    @StateObject private var tipJarStore = TipJarStore()
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -157,7 +159,7 @@ struct ContentView: View {
                         }
 
                         Button {
-                            openSupportPage()
+                            isTipJarPresented = true
                         } label: {
                             Label("Support CountyTracker  ☕", systemImage: "heart.fill")
                                 .font(.headline)
@@ -215,6 +217,11 @@ struct ContentView: View {
                     }
                 )
             }
+            .sheet(isPresented: $isTipJarPresented) {
+                TipJarSheet(tipJarStore: tipJarStore) { message in
+                    alertMessage = message
+                }
+            }
             .fileImporter(
                 isPresented: $isImporting,
                 allowedContentTypes: [.plainText, .json],
@@ -263,25 +270,6 @@ struct ContentView: View {
         themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
     }
 
-    private var supportURL: URL? {
-        guard
-            let raw = Bundle.main.object(forInfoDictionaryKey: "SupportTipJarURL") as? String,
-            !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-            let url = URL(string: raw)
-        else {
-            return nil
-        }
-        return url
-    }
-
-    private func openSupportPage() {
-        guard let url = supportURL else {
-            alertMessage = "Support link isn't configured yet."
-            return
-        }
-        openURL(url)
-    }
-
     private func exportMapToPhotos() {
         guard let coordinator = mapCoordinator else {
             alertMessage = "Map not ready"
@@ -320,6 +308,113 @@ struct ContentView: View {
     }
 
 
+}
+
+private struct TipJarSheet: View {
+    @ObservedObject var tipJarStore: TipJarStore
+    let onResult: (String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var customAmountText = ""
+    @State private var isPurchasing = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 14) {
+                Text("Support CountyTracker")
+                    .font(.title3)
+                    .fontWeight(.bold)
+
+                if tipJarStore.isLoadingProducts {
+                    ProgressView("Loading tips…")
+                } else if let loadError = tipJarStore.loadErrorMessage {
+                    Text(loadError)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(tipJarStore.suggestedProducts, id: \.id) { product in
+                            Button {
+                                Task { await purchase(product) }
+                            } label: {
+                                HStack {
+                                    Text("Tip \(product.displayPrice)")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                    Text(product.displayPrice)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(isPurchasing)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Custom amount")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        TextField("e.g. 2.99", text: $customAmountText)
+                            .keyboardType(.decimalPad)
+                            .textFieldStyle(.roundedBorder)
+
+                        Button("Use Closest Tip Tier") {
+                            Task { await purchaseClosestToCustomAmount() }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isPurchasing)
+
+                        Text("Tip amounts are fixed App Store products. Custom amounts use the closest available tier.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Tip Jar")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+            }
+            .task {
+                await tipJarStore.loadProducts()
+            }
+        }
+    }
+
+    private func purchase(_ product: Product) async {
+        isPurchasing = true
+        let message = await tipJarStore.purchase(product: product)
+        isPurchasing = false
+        onResult(message)
+        if message.hasPrefix("Thanks") {
+            dismiss()
+        }
+    }
+
+    private func purchaseClosestToCustomAmount() async {
+        let normalized = customAmountText
+            .replacingOccurrences(of: "$", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let amount = Decimal(string: normalized), amount > 0 else {
+            onResult("Enter a valid tip amount.")
+            return
+        }
+
+        guard let product = tipJarStore.closestProduct(to: amount) else {
+            onResult("Tip products are not available yet. Try again shortly.")
+            return
+        }
+
+        await purchase(product)
+    }
 }
 
 // MARK: - Location onboarding sheet
