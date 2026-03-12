@@ -25,11 +25,11 @@ struct CountyBoundaryMapView: UIViewRepresentable {
             do {
                 async let polys = CountyBoundaryLoader.shared.loadPolygons()
                 async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
-                async let border = CountyBoundaryLoader.shared.loadUSBorder()
-                let (polygons, annotations, borderPoly) = try await (polys, anns, border)
+                async let border = CountyBoundaryLoader.shared.loadBorderPolygons()
+                let (polygons, annotations, borderPolygons) = try await (polys, anns, border)
                 await MainActor.run {
-                    mapView.addOverlay(borderPoly, level: .aboveRoads)
                     mapView.addOverlays(polygons, level: .aboveRoads)
+                    mapView.addOverlays(borderPolygons, level: .aboveRoads)
                     mapView.addAnnotations(annotations)
                 }
             } catch {
@@ -70,14 +70,15 @@ struct CountyBoundaryMapView: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
+                let isBorder = polygon.title == CountyBoundaryLoader.USBorderKey
                 
-                // Check if this is the US border
-                if polygon.title == CountyBoundaryLoader.USBorderKey {
-                    renderer.fillColor = .clear
+                if isBorder {
+                    // Border: theme color, thicker stroke, no fill
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
-                    renderer.lineWidth = 2.5  // Slightly thicker than counties
+                    renderer.lineWidth   = 2.5
+                    renderer.fillColor   = .clear
                 } else {
-                    // Regular county rendering
+                    // County: simple outline
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.85)
                     renderer.lineWidth   = 1.5
                     renderer.fillColor   = .clear

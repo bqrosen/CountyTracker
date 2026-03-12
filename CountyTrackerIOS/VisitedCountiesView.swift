@@ -48,12 +48,11 @@ struct VisitedCountyMapView: UIViewRepresentable {
             do {
                 async let polys = CountyBoundaryLoader.shared.loadPolygons()
                 async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
-                async let border = CountyBoundaryLoader.shared.loadUSBorder()
-                let (polygons, annotations, borderPoly) = try await (polys, anns, border)
+                async let border = CountyBoundaryLoader.shared.loadBorderPolygons()
+                let (polygons, annotations, borderPolygons) = try await (polys, anns, border)
                 await MainActor.run {
-                    // Add border first so it renders behind counties
-                    mapView.addOverlay(borderPoly, level: .aboveRoads)
                     mapView.addOverlays(polygons, level: .aboveRoads)
+                    mapView.addOverlays(borderPolygons, level: .aboveRoads)
                     mapView.addAnnotations(annotations)
                 }
             } catch {
@@ -140,11 +139,11 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 do {
                     async let polys = CountyBoundaryLoader.shared.loadPolygons()
                     async let anns  = CountyBoundaryLoader.shared.loadAnnotations()
-                    async let border = CountyBoundaryLoader.shared.loadUSBorder()
-                    let (polygons, annotations, borderPoly) = try await (polys, anns, border)
+                    async let border = CountyBoundaryLoader.shared.loadBorderPolygons()
+                    let (polygons, annotations, borderPolygons) = try await (polys, anns, border)
                     await MainActor.run {
-                        mapView.addOverlay(borderPoly, level: .aboveRoads)
                         mapView.addOverlays(polygons, level: .aboveRoads)
+                        mapView.addOverlays(borderPolygons, level: .aboveRoads)
                         mapView.addAnnotations(annotations)
                     }
                 } catch {
@@ -174,18 +173,18 @@ struct VisitedCountyMapView: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
+                let fillColor = UIColor(parent.themeSettings.mapFillColor)
+                let isBorder = polygon.title == CountyBoundaryLoader.USBorderKey
                 
-                // Check if this is the US border
-                if polygon.title == CountyBoundaryLoader.USBorderKey {
-                    renderer.fillColor = .clear
+                if isBorder {
+                    // Border: always visible, theme color, thicker stroke, no fill
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
-                    renderer.lineWidth = 2.5  // Slightly thicker than counties
+                    renderer.lineWidth   = 2.5
+                    renderer.fillColor   = .clear
                 } else {
-                    // Regular county rendering
+                    // County: visited get filled, all show stroke only when zoomed in
                     let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
-                    let fillColor = UIColor(parent.themeSettings.mapFillColor)
                     renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                    // Hide strokes at continental scale (span > 20.0), show only visited fills
                     renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
                     renderer.lineWidth   = 1.5
                 }

@@ -16,9 +16,12 @@ targets:
           - README.md
           - counties.json
           - county_centroids.json
+          - us_border.geojson
       - path: CountyTrackerIOS/counties.json
         buildPhase: resources
       - path: CountyTrackerIOS/county_centroids.json
+        buildPhase: resources
+      - path: CountyTrackerIOS/us_border.geojson
         buildPhase: resources
     info:
       path: CountyTrackerIOS/Info.plist
