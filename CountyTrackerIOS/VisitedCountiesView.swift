@@ -41,6 +41,13 @@ struct VisitedCountyMapView: UIViewRepresentable {
         context.coordinator.lastVisitedKeys = visitedKeys
         context.coordinator.lastTheme = theme
 
+        let longPress = UILongPressGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleLongPress(_:))
+        )
+        longPress.minimumPressDuration = 0.6
+        mapView.addGestureRecognizer(longPress)
+
         // Notify parent that coordinator is ready
         onCoordinatorReady?(context.coordinator)
 
@@ -140,6 +147,25 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 let snapshot = self.takeSnapshot(of: mapView)
                 completion(snapshot)
             }
+        }
+
+        @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+            guard gesture.state == .began, let mapView = mapView else { return }
+
+            let point = gesture.location(in: mapView)
+            let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
+
+            let destinationPlacemark = MKPlacemark(coordinate: coordinate)
+            let destination = MKMapItem(placemark: destinationPlacemark)
+            destination.name = "Pinned Destination"
+
+            let currentLocation = MKMapItem.forCurrentLocation()
+            MKMapItem.openMaps(
+                with: [currentLocation, destination],
+                launchOptions: [
+                    MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
+                ]
+            )
         }
 
         func reloadOverlays(on mapView: MKMapView) {
