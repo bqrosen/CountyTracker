@@ -315,7 +315,6 @@ private struct TipJarSheet: View {
     let onResult: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var customAmountText = ""
     @State private var isPurchasing = false
 
     var body: some View {
@@ -350,26 +349,6 @@ private struct TipJarSheet: View {
                             .disabled(isPurchasing)
                         }
                     }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Custom amount")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-
-                        TextField("e.g. 2.99", text: $customAmountText)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.roundedBorder)
-
-                        Button("Use Closest Tip Tier") {
-                            Task { await purchaseClosestToCustomAmount() }
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(isPurchasing)
-
-                        Text("Tip amounts are fixed App Store products. Custom amounts use the closest available tier.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
                 }
 
                 Spacer()
@@ -396,24 +375,6 @@ private struct TipJarSheet: View {
         if message.hasPrefix("Thanks") {
             dismiss()
         }
-    }
-
-    private func purchaseClosestToCustomAmount() async {
-        let normalized = customAmountText
-            .replacingOccurrences(of: "$", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard let amount = Decimal(string: normalized), amount > 0 else {
-            onResult("Enter a valid tip amount.")
-            return
-        }
-
-        guard let product = tipJarStore.closestProduct(to: amount) else {
-            onResult("Tip products are not available yet. Try again shortly.")
-            return
-        }
-
-        await purchase(product)
     }
 }
 
