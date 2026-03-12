@@ -73,9 +73,9 @@ struct CountyBoundaryMapView: UIViewRepresentable {
                 let isBorder = polygon.title == CountyBoundaryLoader.USBorderKey
                 
                 if isBorder {
-                    // Border: theme color, thicker stroke, no fill
+                    // Border: theme color, no fill
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
-                    renderer.lineWidth   = 2.5
+                    renderer.lineWidth   = 1.5
                     renderer.fillColor   = .clear
                 } else {
                     // County: simple outline
