@@ -177,9 +177,9 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 let isBorder = polygon.title == CountyBoundaryLoader.USBorderKey
                 
                 if isBorder {
-                    // Border: always visible, theme color, thicker stroke, no fill
+                    // Border: always visible, theme color, no fill
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
-                    renderer.lineWidth   = 2.5
+                    renderer.lineWidth   = 1.5
                     renderer.fillColor   = .clear
                 } else {
                     // County: visited get filled, all show stroke only when zoomed in
