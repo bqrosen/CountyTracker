@@ -277,8 +277,8 @@ struct ContentView: View {
                 return
             }
             
-            PHPhotoLibrary.requestAuthorization { status in
-                guard status == .authorized || status == .limited else {
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+                guard status == .authorized else {
                     DispatchQueue.main.async {
                         self.alertMessage = "Photos access denied. Enable in Settings to save maps."
                     }
