@@ -42,7 +42,6 @@ targets:
         NSLocationWhenInUseUsageDescription: CountyTracker uses your location to record counties you've visited.
         NSLocationAlwaysAndWhenInUseUsageDescription: CountyTracker uses your location in the background to automatically record counties as you drive through them — without draining your battery.
         NSPhotoLibraryAddUsageDescription: CountyTracker saves map snapshots to your Photos library.
-        SupportTipJarURL: ""
         UIBackgroundModes:
           - location
         UIFileSharingEnabled: true
