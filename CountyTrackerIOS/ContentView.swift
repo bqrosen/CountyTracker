@@ -9,6 +9,7 @@ struct ContentView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var store: CountyTrackerStore
     @EnvironmentObject private var themeSettings: ThemeSettings
+    @Environment(\.openURL) private var openURL
 
     @AppStorage("hasSeenLocationOnboarding") private var hasSeenOnboarding = false
 
@@ -156,7 +157,7 @@ struct ContentView: View {
                         }
 
                         Button {
-                            // placeholder — tip jar coming soon
+                            openSupportPage()
                         } label: {
                             Label("Support CountyTracker  ☕", systemImage: "heart.fill")
                                 .font(.headline)
@@ -165,7 +166,6 @@ struct ContentView: View {
                         }
                         .buttonStyle(.bordered)
                         .tint(.pink)
-                        .disabled(true)
 
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Visit History")
@@ -261,6 +261,25 @@ struct ContentView: View {
 
     private func themeLabel(_ theme: AppTheme) -> String {
         themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
+    }
+
+    private var supportURL: URL? {
+        guard
+            let raw = Bundle.main.object(forInfoDictionaryKey: "SupportTipJarURL") as? String,
+            !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+            let url = URL(string: raw)
+        else {
+            return nil
+        }
+        return url
+    }
+
+    private func openSupportPage() {
+        guard let url = supportURL else {
+            alertMessage = "Support link isn't configured yet."
+            return
+        }
+        openURL(url)
     }
 
     private func exportMapToPhotos() {
