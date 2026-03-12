@@ -52,10 +52,6 @@ final class TipJarStore: ObservableObject {
         isLoadingProducts = false
     }
 
-    func closestProduct(to amount: Decimal) -> Product? {
-        closestProduct(to: amount, excluding: [])
-    }
-
     func purchase(product: Product) async -> String {
         do {
             let result = try await product.purchase()
