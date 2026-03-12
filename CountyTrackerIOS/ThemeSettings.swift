@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case system
@@ -12,6 +13,27 @@ enum AppTheme: String, CaseIterable, Identifiable {
     case snow
 
     var id: String { rawValue }
+
+    var appIconName: String? {
+        switch self {
+        case .system, .nord:
+            return nil
+        case .light:
+            return "AppIconLight"
+        case .dark:
+            return "AppIconDark"
+        case .sepia:
+            return "AppIconSepia"
+        case .outrun:
+            return "AppIconOutrun"
+        case .cyber:
+            return "AppIconCyber"
+        case .jungle:
+            return "AppIconJungle"
+        case .snow:
+            return "AppIconSnow"
+        }
+    }
 
     var displayName: String {
         switch self {
@@ -33,6 +55,7 @@ final class ThemeSettings: ObservableObject {
     @Published var selectedTheme: AppTheme {
         didSet {
             UserDefaults.standard.set(selectedTheme.rawValue, forKey: storageKey)
+            applyAppIcon(for: selectedTheme)
         }
     }
 
@@ -45,6 +68,17 @@ final class ThemeSettings: ObservableObject {
         } else {
             selectedTheme = .system
         }
+
+        applyAppIcon(for: selectedTheme)
+    }
+
+    private func applyAppIcon(for theme: AppTheme) {
+        guard UIApplication.shared.supportsAlternateIcons else { return }
+
+        let desiredIcon = theme.appIconName
+        guard UIApplication.shared.alternateIconName != desiredIcon else { return }
+
+        UIApplication.shared.setAlternateIconName(desiredIcon)
     }
 
     var preferredColorScheme: ColorScheme? {

@@ -36,6 +36,29 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         LSRequiresIPhoneOS: true
+        CFBundleIcons:
+          CFBundleAlternateIcons:
+            AppIconLight:
+              CFBundleIconFiles:
+                - AppIconLight
+            AppIconDark:
+              CFBundleIconFiles:
+                - AppIconDark
+            AppIconSepia:
+              CFBundleIconFiles:
+                - AppIconSepia
+            AppIconOutrun:
+              CFBundleIconFiles:
+                - AppIconOutrun
+            AppIconCyber:
+              CFBundleIconFiles:
+                - AppIconCyber
+            AppIconJungle:
+              CFBundleIconFiles:
+                - AppIconJungle
+            AppIconSnow:
+              CFBundleIconFiles:
+                - AppIconSnow
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}
