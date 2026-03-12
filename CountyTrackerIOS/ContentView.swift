@@ -12,6 +12,7 @@ struct ContentView: View {
     @EnvironmentObject private var themeSettings: ThemeSettings
 
     @AppStorage("hasSeenLocationOnboarding") private var hasSeenOnboarding = false
+    @AppStorage("hasSeenQuickTutorial") private var hasSeenQuickTutorial = false
     @AppStorage("hasCompletedSupportPurchase") private var hasCompletedSupportPurchase = false
 
     @State private var isImporting = false
@@ -24,7 +25,15 @@ struct ContentView: View {
     @State private var mapSnapshot: UIImage?
     @State private var isShareSheetPresented = false
     @State private var isTipJarPresented = false
+    @State private var tutorialStepIndex: Int?
+    @State private var isTutorialRunning = false
     @StateObject private var tipJarStore = TipJarStore()
+
+    private let quickTutorialSteps = [
+        "Long-press anywhere on the map for driving directions in Apple Maps.",
+        "Use the share menu to import/export your map data or save a map snapshot to Photos.",
+        "Tap Start to track counties automatically as you travel."
+    ]
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -203,6 +212,16 @@ struct ContentView: View {
                 }
             }
             .foregroundStyle(palette.primaryText)
+            .overlay(alignment: .top) {
+                if let stepIndex = tutorialStepIndex,
+                   quickTutorialSteps.indices.contains(stepIndex) {
+                    QuickTutorialBanner(message: quickTutorialSteps[stepIndex])
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .allowsHitTesting(false)
+                }
+            }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: Binding(
@@ -268,6 +287,12 @@ struct ContentView: View {
             } message: {
                 Text("This will permanently delete all \(store.totalUniqueCounties) visited counties. This cannot be undone.")
             }
+            .onAppear {
+                startQuickTutorialIfNeeded()
+            }
+            .onChange(of: hasSeenOnboarding) { _, _ in
+                startQuickTutorialIfNeeded()
+            }
         }
     }
 
@@ -312,7 +337,51 @@ struct ContentView: View {
         }
     }
 
+    private func startQuickTutorialIfNeeded() {
+        guard hasSeenOnboarding, !hasSeenQuickTutorial, !isTutorialRunning else { return }
 
+        hasSeenQuickTutorial = true
+        isTutorialRunning = true
+
+        Task { @MainActor in
+            for index in quickTutorialSteps.indices {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    tutorialStepIndex = index
+                }
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+            }
+
+            withAnimation(.easeInOut(duration: 0.2)) {
+                tutorialStepIndex = nil
+            }
+            isTutorialRunning = false
+        }
+    }
+
+
+}
+
+private struct QuickTutorialBanner: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "sparkles")
+                .font(.subheadline)
+            Text(message)
+                .font(.subheadline)
+                .multilineTextAlignment(.leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.primary.opacity(0.15), lineWidth: 1)
+        )
+        .shadow(radius: 6)
+    }
 }
 
 private struct TipJarSheet: View {
