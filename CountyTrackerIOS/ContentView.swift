@@ -12,6 +12,7 @@ struct ContentView: View {
     @EnvironmentObject private var themeSettings: ThemeSettings
 
     @AppStorage("hasSeenLocationOnboarding") private var hasSeenOnboarding = false
+    @AppStorage("hasCompletedSupportPurchase") private var hasCompletedSupportPurchase = false
 
     @State private var isImporting = false
     @State private var isExporting = false
@@ -158,15 +159,17 @@ struct ContentView: View {
                             .disabled(store.visits.isEmpty)
                         }
 
-                        Button {
-                            isTipJarPresented = true
-                        } label: {
-                            Label("Support CountyTracker  ☕", systemImage: "heart.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
+                        if !hasCompletedSupportPurchase {
+                            Button {
+                                isTipJarPresented = true
+                            } label: {
+                                Label("Support CountyTracker  ☕", systemImage: "heart.fill")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                            }
+                            .buttonStyle(.bordered)
                         }
-                        .buttonStyle(.bordered)
 
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Visit History")
@@ -217,7 +220,10 @@ struct ContentView: View {
                 )
             }
             .sheet(isPresented: $isTipJarPresented) {
-                TipJarSheet(tipJarStore: tipJarStore) { message in
+                TipJarSheet(tipJarStore: tipJarStore) { message, didCompletePurchase in
+                    if didCompletePurchase {
+                        hasCompletedSupportPurchase = true
+                    }
                     alertMessage = message
                 }
             }
@@ -311,7 +317,7 @@ struct ContentView: View {
 
 private struct TipJarSheet: View {
     @ObservedObject var tipJarStore: TipJarStore
-    let onResult: (String) -> Void
+    let onResult: (String, Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var isPurchasing = false
@@ -368,10 +374,10 @@ private struct TipJarSheet: View {
 
     private func purchase(_ product: Product) async {
         isPurchasing = true
-        let message = await tipJarStore.purchase(product: product)
+        let result = await tipJarStore.purchase(product: product)
         isPurchasing = false
-        onResult(message)
-        if message.hasPrefix("Thanks") {
+        onResult(result.message, result.didCompletePurchase)
+        if result.didCompletePurchase {
             dismiss()
         }
     }

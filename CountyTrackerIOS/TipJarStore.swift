@@ -1,6 +1,11 @@
 import Foundation
 import StoreKit
 
+struct TipJarPurchaseResult {
+    let message: String
+    let didCompletePurchase: Bool
+}
+
 @MainActor
 final class TipJarStore: ObservableObject {
     @Published private(set) var products: [Product] = []
@@ -13,22 +18,8 @@ final class TipJarStore: ObservableObject {
         "com.bqrosen.CountyTracker.tip.999"
     ]
 
-    private let suggestedAmounts: [Decimal] = [0.99, 4.99, 9.99]
-
     var suggestedProducts: [Product] {
-        if products.isEmpty { return [] }
-
-        var chosen: [Product] = []
-        var usedIDs = Set<String>()
-
-        for amount in suggestedAmounts {
-            if let product = closestProduct(to: amount, excluding: usedIDs) {
-                chosen.append(product)
-                usedIDs.insert(product.id)
-            }
-        }
-
-        return chosen
+        products
     }
 
     func loadProducts() async {
@@ -52,7 +43,7 @@ final class TipJarStore: ObservableObject {
         isLoadingProducts = false
     }
 
-    func purchase(product: Product) async -> String {
+    func purchase(product: Product) async -> TipJarPurchaseResult {
         do {
             let result = try await product.purchase()
             switch result {
@@ -60,29 +51,19 @@ final class TipJarStore: ObservableObject {
                 switch verification {
                 case .verified(let transaction):
                     await transaction.finish()
-                    return "Thanks for your support!"
+                    return TipJarPurchaseResult(message: "Thanks for your support!", didCompletePurchase: true)
                 case .unverified:
-                    return "Purchase could not be verified."
+                    return TipJarPurchaseResult(message: "Purchase could not be verified.", didCompletePurchase: false)
                 }
             case .userCancelled:
-                return "Purchase canceled."
+                return TipJarPurchaseResult(message: "Purchase canceled.", didCompletePurchase: false)
             case .pending:
-                return "Purchase pending approval."
+                return TipJarPurchaseResult(message: "Purchase pending approval.", didCompletePurchase: false)
             @unknown default:
-                return "Purchase did not complete."
+                return TipJarPurchaseResult(message: "Purchase did not complete.", didCompletePurchase: false)
             }
         } catch {
-            return "Purchase failed: \(error.localizedDescription)"
+            return TipJarPurchaseResult(message: "Purchase failed: \(error.localizedDescription)", didCompletePurchase: false)
         }
-    }
-
-    private func closestProduct(to amount: Decimal, excluding excludedIDs: Set<String>) -> Product? {
-        products
-            .filter { !excludedIDs.contains($0.id) }
-            .min { lhs, rhs in
-                let lhsDiff = abs(NSDecimalNumber(decimal: lhs.price).doubleValue - NSDecimalNumber(decimal: amount).doubleValue)
-                let rhsDiff = abs(NSDecimalNumber(decimal: rhs.price).doubleValue - NSDecimalNumber(decimal: amount).doubleValue)
-                return lhsDiff < rhsDiff
-            }
     }
 }
