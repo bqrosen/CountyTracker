@@ -28,3 +28,8 @@ Project generation has already been done in this repository:
 - Only US locations (`isoCountryCode == "US"`) are recorded.
 - Updates are throttled by time and distance to reduce geocoding calls.
 - App supports both While Using and Always location permission prompts.
+
+## License
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International license.
+
+See the root [LICENSE](../LICENSE) file for details.
