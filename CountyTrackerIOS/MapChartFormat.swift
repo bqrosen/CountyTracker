@@ -55,6 +55,10 @@ enum MapChartPath {
         let s = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !s.isEmpty else { return nil }
 
+        if let alias = MapChartTemplateOverrides.parseAliases[s] {
+            return alias
+        }
+
         // Match the last __ followed by exactly 2 uppercase letters at end of string
         guard let range = s.range(of: #"__([A-Z]{2})$"#, options: .regularExpression) else {
             return nil
@@ -90,6 +94,14 @@ enum MapChartPath {
     }
 
     static func build(countyName: String, stateCode: String) -> String {
-        "\(CountyNameNormalizer.mapChartToken(fromCountyName: countyName))__\(stateCode.uppercased())"
+        let key = CountyNameNormalizer.countyKey(
+            countryCode: "US",
+            stateCode: stateCode,
+            countyName: countyName
+        )
+        if let templatePath = MapChartTemplateOverrides.pathByCountyKey[key] {
+            return templatePath
+        }
+        return "\(CountyNameNormalizer.mapChartToken(fromCountyName: countyName))__\(stateCode.uppercased())"
     }
 }

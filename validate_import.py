@@ -57,10 +57,27 @@ COLLISION_SET = {
     ("bedford", "VA"), ("franklin", "VA"), ("richmond", "VA"), ("roanoke", "VA"),
 }
 
+MAPCHART_ALIAS = {
+    "Saint_Croix__VI": ("St Croix", "VI"),
+    "Saint_John__VI": ("St John", "VI"),
+    "Saint_Thomas__VI": ("St Thomas", "VI"),
+    "Kusilvak__AK": ("Wade Hampton", "AK"),
+    "SE_Fairbanks__AK": ("Southeast Fairbanks", "AK"),
+    "Copper_River__AK": ("Chugach", "AK"),
+    "Dona_Ana__NM": ("Do a Ana", "NM"),
+    "LaSalle__LA": ("La Salle", "LA"),
+    "Oglala_Lakota__SD": ("Shannon", "SD"),
+    "La_Salle__IL": ("LaSalle", "IL"),
+    "Sainte_Genevieve__MO": ("Ste Genevieve", "MO"),
+}
+
 def canonicalize_dc(name, state):
     return "District of Columbia" if state.upper() == "DC" else name
 
 def parse_path(path):
+    if path in MAPCHART_ALIAS:
+        return MAPCHART_ALIAS[path]
+
     m = re.search(r'__([A-Z]{2})$', path)
     if not m:
         return None
