@@ -7,3 +7,6 @@ DerivedData/
 *.xcodeproj/xcuserdata/
 *.xcuserdatad/
 *.xcuserstate
+
+# Local MapChart exports
+mapchartSave_allCountiesMaster.txt
