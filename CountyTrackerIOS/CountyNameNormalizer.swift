@@ -39,6 +39,9 @@ enum CountyNameNormalizer {
             }
         }
 
+        // Fold accented characters to their ASCII base (ñ→n, é→e, í→i, etc.)
+        text = text.applyingTransform(.stripDiacritics, reverse: false) ?? text
+
         let filteredScalars = text.unicodeScalars.map { scalar -> Character in
             if CharacterSet.alphanumerics.contains(scalar) || scalar == " " {
                 return Character(scalar)
