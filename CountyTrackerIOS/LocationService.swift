@@ -51,11 +51,6 @@ final class LocationService: NSObject, ObservableObject {
     }
 
     func startTracking() {
-        guard CLLocationManager.locationServicesEnabled() else {
-            errorMessage = "Location services are disabled in system settings."
-            return
-        }
-
         // Check current status and request appropriate permission.
         // The delegate callback (locationManagerDidChangeAuthorization) will
         // handle transitioning from When In Use to Always if needed.
