@@ -40,8 +40,9 @@ final class LocationService: NSObject, ObservableObject {
             pendingAlwaysUpgrade = true
             manager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse:
-            // Already have When In Use — ask to upgrade.
-            manager.requestAlwaysAuthorization()
+            // Already have When In Use — mark upgrade intent and let delegate handle it
+            // (don't call requestAlwaysAuthorization directly as it can block UI)
+            pendingAlwaysUpgrade = true
         default:
             break
         }
@@ -123,9 +124,12 @@ extension LocationService: CLLocationManagerDelegate {
         case .authorizedWhenInUse:
             errorMessage = nil
             // Upgrade to Always if the onboarding requested it
+            // Dispatch asynchronously to avoid blocking on the main thread
             if pendingAlwaysUpgrade {
                 pendingAlwaysUpgrade = false
-                manager.requestAlwaysAuthorization()
+                DispatchQueue.main.async {
+                    manager.requestAlwaysAuthorization()
+                }
                 return
             }
             if isTracking {
