@@ -61,6 +61,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     mapView.addOverlays(polygons, level: .aboveRoads)
                     mapView.addOverlays(borderPolygons, level: .aboveRoads)
                     mapView.addAnnotations(annotations)
+                    context.coordinator.overlaysLoaded = true
                 }
             } catch {
                 print("VisitedCountyMapView: failed to load – \(error)")
@@ -79,10 +80,14 @@ struct VisitedCountyMapView: UIViewRepresentable {
         }
         if visitedKeys != context.coordinator.lastVisitedKeys {
             context.coordinator.lastVisitedKeys = visitedKeys
-            context.coordinator.reloadOverlays(on: mapView)
+            if context.coordinator.overlaysLoaded {
+                context.coordinator.refreshRenderers(on: mapView)
+            }
         } else if theme != context.coordinator.lastTheme {
             context.coordinator.lastTheme = theme
-            context.coordinator.reloadOverlays(on: mapView)
+            if context.coordinator.overlaysLoaded {
+                context.coordinator.refreshRenderers(on: mapView)
+            }
         }
         if resetMapZoom {
             let region: MKCoordinateRegion
@@ -104,7 +109,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
         var lastTheme: AppTheme = .system
         var hasCenteredOnOpen = false
         var currentSpan: Double = 28.0
-        private var lastStrokeVisibility = true  // true = strokes visible (span <= 7.0)
+        private var lastStrokeVisibility = true  // true = strokes visible (span <= 20.0)
+        private var overlaysLoaded = false
 
         init(_ parent: VisitedCountyMapView) {
             self.parent = parent
@@ -168,7 +174,9 @@ struct VisitedCountyMapView: UIViewRepresentable {
             )
         }
 
+        /// First-time load (or forced full reload): remove everything and re-add fresh polygons.
         func reloadOverlays(on mapView: MKMapView) {
+            overlaysLoaded = false
             mapView.removeOverlays(mapView.overlays)
             mapView.removeAnnotations(mapView.annotations.filter { !($0 is MKUserLocation) })
             Task {
@@ -181,6 +189,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         mapView.addOverlays(polygons, level: .aboveRoads)
                         mapView.addOverlays(borderPolygons, level: .aboveRoads)
                         mapView.addAnnotations(annotations)
+                        self.overlaysLoaded = true
                     }
                 } catch {
                     print("VisitedCountyMapView: reload failed – \(error)")
@@ -188,17 +197,44 @@ struct VisitedCountyMapView: UIViewRepresentable {
             }
         }
 
+        /// Fast path: update renderer properties in-place without removing/re-adding overlays.
+        /// Called when only visitedKeys, theme colours, or stroke visibility changes.
+        func refreshRenderers(on mapView: MKMapView) {
+            let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
+            let fillColor   = UIColor(parent.themeSettings.mapFillColor)
+            let showStrokes = currentSpan <= 20.0
+
+            for overlay in mapView.overlays {
+                guard let polygon = overlay as? MKPolygon,
+                      let renderer = mapView.renderer(for: overlay) as? MKPolygonRenderer
+                else { continue }
+
+                let isBorder = polygon.title == CountyBoundaryLoader.USBorderKey
+                if isBorder {
+                    renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
+                } else {
+                    let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
+                    renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                    renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : .clear
+                }
+                renderer.setNeedsDisplay()
+            }
+        }
+
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             let span = mapView.region.span.latitudeDelta
             currentSpan = span
-            
-            // Reload overlays when crossing the stroke visibility threshold
+
+            // Refresh renderer stroke visibility when crossing the threshold —
+            // no overlay removal needed, just update colours in-place.
             let shouldShowStrokes = span <= 20.0
             if shouldShowStrokes != lastStrokeVisibility {
                 lastStrokeVisibility = shouldShowStrokes
-                reloadOverlays(on: mapView)
+                if overlaysLoaded {
+                    refreshRenderers(on: mapView)
+                }
             }
-            
+
             for ann in mapView.annotations {
                 (mapView.view(for: ann) as? CountyLabelAnnotationView)?.update(span: span)
             }
