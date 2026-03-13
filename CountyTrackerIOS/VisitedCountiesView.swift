@@ -205,19 +205,19 @@ struct VisitedCountyMapView: UIViewRepresentable {
             let showStrokes = currentSpan <= 20.0
 
             for overlay in mapView.overlays {
-                guard let polygon = overlay as? MKPolygon,
-                      let renderer = mapView.renderer(for: overlay) as? MKPolygonRenderer
-                else { continue }
-
-                let isBorder = polygon.title == CountyBoundaryLoader.USBorderKey
-                if isBorder {
+                // US border is now an MKMultiPolygon to prevent zoom-out clipping.
+                if let multi = overlay as? MKMultiPolygon,
+                   let renderer = mapView.renderer(for: overlay) as? MKMultiPolygonRenderer,
+                   multi.title == CountyBoundaryLoader.USBorderKey {
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
-                } else {
+                    renderer.setNeedsDisplay()
+                } else if let polygon = overlay as? MKPolygon,
+                          let renderer = mapView.renderer(for: overlay) as? MKPolygonRenderer {
                     let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
                     renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
                     renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : .clear
+                    renderer.setNeedsDisplay()
                 }
-                renderer.setNeedsDisplay()
             }
         }
 
@@ -242,24 +242,26 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            // US national border — kept as MKMultiPolygon so MapKit uses a single
+            // combined bounding rect and avoids clipping at near-maximum zoom out.
+            if let multi = overlay as? MKMultiPolygon,
+               multi.title == CountyBoundaryLoader.USBorderKey {
+                let renderer = MKMultiPolygonRenderer(multiPolygon: multi)
+                let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
+                renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
+                renderer.lineWidth   = 1.5
+                renderer.fillColor   = .clear
+                return renderer
+            }
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
                 let fillColor = UIColor(parent.themeSettings.mapFillColor)
-                let isBorder = polygon.title == CountyBoundaryLoader.USBorderKey
-                
-                if isBorder {
-                    // Border: always visible, theme color, no fill
-                    renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
-                    renderer.lineWidth   = 1.5
-                    renderer.fillColor   = .clear
-                } else {
-                    // County: visited get filled, all show stroke only when zoomed in
-                    let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
-                    renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                    renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
-                    renderer.lineWidth   = 1.5
-                }
+                // County: visited get filled, all show stroke only when zoomed in
+                let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
+                renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
+                renderer.lineWidth   = 1.5
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)

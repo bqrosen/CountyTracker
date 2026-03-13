@@ -189,14 +189,20 @@ actor CountyBoundaryLoader {
 
     // MARK: US Border
 
-    /// Returns freshly created MKPolygon instances for the US national border.
-    /// Each polygon's `title` is set to `USBorderKey` for identification.
+    /// Returns a single freshly created MKMultiPolygon for the US national border.
+    /// Using MKMultiPolygon (instead of many individual MKPolygons) gives MapKit a
+    /// single combined bounding rect, preventing tile-based culling that would clip
+    /// part of the border at near-maximum zoom out.
+    /// Each polygon's container title is set to `USBorderKey` for identification.
     /// Parses the GeoJSON only once; subsequent calls create new instances from cached data.
-    func loadBorderPolygons() async throws -> [MKPolygon] {
+    func loadBorderPolygons() async throws -> [MKMultiPolygon] {
         if borderRecords == nil {
             borderRecords = try await parseBorderRecords()
         }
-        return borderRecords!.map { $0.makePolygon() }
+        let polygons = borderRecords!.map { $0.makePolygon() }
+        let multi = MKMultiPolygon(polygons)
+        multi.title = Self.USBorderKey
+        return [multi]
     }
 
     private func parseBorderRecords() async throws -> [PolygonRecord] {
