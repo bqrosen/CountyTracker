@@ -68,6 +68,7 @@ actor CountyBoundaryLoader {
     private var borderRecords: [PolygonRecord]?
     
     static let USBorderKey = "_us_border"
+    private static let maxBorderRingPoints = 6000
 
     // MARK: Polygons
 
@@ -274,10 +275,12 @@ actor CountyBoundaryLoader {
 
             for geometry in feature.geometry {
                 if let polygon = geometry as? MKPolygon {
-                    result.append(PolygonRecord(polygon: polygon, key: Self.USBorderKey))
+                    let simplified = simplifyBorderPolygonIfNeeded(polygon)
+                    result.append(PolygonRecord(polygon: simplified, key: Self.USBorderKey))
                 } else if let multi = geometry as? MKMultiPolygon {
                     for polygon in multi.polygons {
-                        result.append(PolygonRecord(polygon: polygon, key: Self.USBorderKey))
+                        let simplified = simplifyBorderPolygonIfNeeded(polygon)
+                        result.append(PolygonRecord(polygon: simplified, key: Self.USBorderKey))
                     }
                 }
             }
@@ -285,6 +288,50 @@ actor CountyBoundaryLoader {
 
         print("CountyBoundaryLoader: cached \(result.count) border polygon records")
         return result
+    }
+
+    private func simplifyBorderPolygonIfNeeded(_ polygon: MKPolygon) -> MKPolygon {
+        var outer = [CLLocationCoordinate2D](repeating: .init(), count: polygon.pointCount)
+        polygon.getCoordinates(&outer, range: NSRange(location: 0, length: polygon.pointCount))
+        outer = downsampleRingIfNeeded(outer, maxPoints: Self.maxBorderRingPoints)
+
+        let holes: [MKPolygon]? = polygon.interiorPolygons?.map { hole in
+            var holeCoords = [CLLocationCoordinate2D](repeating: .init(), count: hole.pointCount)
+            hole.getCoordinates(&holeCoords, range: NSRange(location: 0, length: hole.pointCount))
+            holeCoords = downsampleRingIfNeeded(holeCoords, maxPoints: Self.maxBorderRingPoints)
+            return MKPolygon(coordinates: &holeCoords, count: holeCoords.count)
+        }
+
+        return MKPolygon(
+            coordinates: &outer,
+            count: outer.count,
+            interiorPolygons: (holes?.isEmpty ?? true) ? nil : holes
+        )
+    }
+
+    private func downsampleRingIfNeeded(_ coordinates: [CLLocationCoordinate2D], maxPoints: Int) -> [CLLocationCoordinate2D] {
+        guard coordinates.count > maxPoints, maxPoints >= 4 else { return coordinates }
+
+        let isClosed = coordinates.first?.latitude == coordinates.last?.latitude
+            && coordinates.first?.longitude == coordinates.last?.longitude
+
+        let base = isClosed ? Array(coordinates.dropLast()) : coordinates
+        guard base.count > maxPoints else { return coordinates }
+
+        let targetCount = maxPoints - (isClosed ? 1 : 0)
+        let step = Double(base.count - 1) / Double(targetCount - 1)
+        var sampled: [CLLocationCoordinate2D] = []
+        sampled.reserveCapacity(maxPoints)
+
+        for i in 0..<targetCount {
+            let idx = Int((Double(i) * step).rounded())
+            sampled.append(base[min(idx, base.count - 1)])
+        }
+
+        if isClosed, let first = sampled.first {
+            sampled.append(first)
+        }
+        return sampled
     }
 }
 
