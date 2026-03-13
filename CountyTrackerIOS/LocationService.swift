@@ -53,20 +53,21 @@ final class LocationService: NSObject, ObservableObject {
             return
         }
 
-        // First-time: ask for Always so background wakeup works.
-        // If the user only grants When In Use, significant-change still fires
-        // while the app is in the foreground / suspended (but not after a kill).
-        if authorizationStatus == .notDetermined {
+        // Check current status and request appropriate permission.
+        // The delegate callback (locationManagerDidChangeAuthorization) will
+        // handle transitioning from When In Use to Always if needed.
+        switch authorizationStatus {
+        case .notDetermined:
+            // Ask for full Always permission via the upgrade flow
             requestAlwaysPermission()
             return
-        }
-
-        if authorizationStatus == .authorizedWhenInUse {
-            // Prompt upgrade to Always for full background support
-            manager.requestAlwaysAuthorization()
-        }
-
-        guard authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways else {
+        case .authorizedWhenInUse, .authorizedAlways:
+            // If we only have When In Use, mark that we want Always and the
+            // delegate will upgrade on the next authorization change
+            if authorizationStatus == .authorizedWhenInUse && !pendingAlwaysUpgrade {
+                pendingAlwaysUpgrade = true
+            }
+        default:
             errorMessage = "Location permission denied. Enable it in Settings > Privacy & Security > Location Services."
             return
         }
