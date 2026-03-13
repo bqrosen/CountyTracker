@@ -38,7 +38,9 @@ final class LocationService: NSObject, ObservableObject {
             // iOS won't show Always directly from notDetermined.
             // Request When In Use first; the delegate will upgrade to Always.
             pendingAlwaysUpgrade = true
-            manager.requestWhenInUseAuthorization()
+            DispatchQueue.main.async {
+                self.manager.requestWhenInUseAuthorization()
+            }
         case .authorizedWhenInUse:
             // Already have When In Use — mark upgrade intent and let delegate handle it
             // (don't call requestAlwaysAuthorization directly as it can block UI)
