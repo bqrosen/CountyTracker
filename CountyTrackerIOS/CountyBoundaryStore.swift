@@ -189,20 +189,72 @@ actor CountyBoundaryLoader {
 
     // MARK: US Border
 
-    /// Returns a single freshly created MKMultiPolygon for the US national border.
-    /// Using MKMultiPolygon (instead of many individual MKPolygons) gives MapKit a
-    /// single combined bounding rect, preventing tile-based culling that would clip
-    /// part of the border at near-maximum zoom out.
-    /// Each polygon's container title is set to `USBorderKey` for identification.
+    private enum BorderRegion: CaseIterable {
+        case continentalUS
+        case alaskaAleutians
+        case hawaii
+        case territories
+    }
+
+    /// Returns freshly created MKMultiPolygon overlays for the US national border,
+    /// partitioned into regions (continental US, Alaska/Aleutians, Hawaii, territories).
+    ///
+    /// Regional partitioning avoids a single world-spanning overlay bounds (especially
+    /// due to Aleutian/date-line geometry), which can cause clipping artifacts at
+    /// near-maximum zoom out.
+    ///
+    /// Each returned overlay has title `USBorderKey` for renderer identification.
     /// Parses the GeoJSON only once; subsequent calls create new instances from cached data.
     func loadBorderPolygons() async throws -> [MKMultiPolygon] {
         if borderRecords == nil {
             borderRecords = try await parseBorderRecords()
         }
-        let polygons = borderRecords!.map { $0.makePolygon() }
-        let multi = MKMultiPolygon(polygons)
-        multi.title = Self.USBorderKey
-        return [multi]
+        var grouped: [BorderRegion: [MKPolygon]] = [:]
+        for region in BorderRegion.allCases {
+            grouped[region] = []
+        }
+
+        for record in borderRecords! {
+            let polygon = record.makePolygon()
+            let region = classifyBorderRegion(for: record.coordinates)
+            grouped[region, default: []].append(polygon)
+        }
+
+        var result: [MKMultiPolygon] = []
+        for region in BorderRegion.allCases {
+            guard let polys = grouped[region], !polys.isEmpty else { continue }
+            let multi = MKMultiPolygon(polys)
+            multi.title = Self.USBorderKey
+            result.append(multi)
+        }
+        return result
+    }
+
+    private func classifyBorderRegion(for coordinates: [CLLocationCoordinate2D]) -> BorderRegion {
+        guard !coordinates.isEmpty else { return .territories }
+
+        let lons = coordinates.map(\.longitude)
+        let lats = coordinates.map(\.latitude)
+
+        let minLon = lons.min() ?? 0
+        let maxLon = lons.max() ?? 0
+        let minLat = lats.min() ?? 0
+        let maxLat = lats.max() ?? 0
+
+        // Continental US (CONUS + nearshore islands)
+        if minLon >= -130, maxLon <= -60, minLat >= 22, maxLat <= 52 {
+            return .continentalUS
+        }
+        // Hawaii
+        if minLon >= -162, maxLon <= -154, minLat >= 18, maxLat <= 23 {
+            return .hawaii
+        }
+        // Alaska / Aleutians (includes polygons near +180 for date-line crossing)
+        if maxLat >= 50, (maxLon >= 170 || minLon <= -130) {
+            return .alaskaAleutians
+        }
+        // Remaining polygons: PR/VI, Guam, CNMI, AS, other territories/islands
+        return .territories
     }
 
     private func parseBorderRecords() async throws -> [PolygonRecord] {
