@@ -110,7 +110,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         var hasCenteredOnOpen = false
         var currentSpan: Double = 28.0
         private var lastStrokeVisibility = true  // true = strokes visible (span <= 20.0)
-        private var overlaysLoaded = false
+        var overlaysLoaded = false
 
         init(_ parent: VisitedCountyMapView) {
             self.parent = parent
