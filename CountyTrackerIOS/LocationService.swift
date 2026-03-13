@@ -115,67 +115,72 @@ final class LocationService: NSObject, ObservableObject {
     }
 }
 
-@MainActor
 extension LocationService: CLLocationManagerDelegate {
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            self.authorizationStatus = manager.authorizationStatus
 
-        switch authorizationStatus {
-        case .authorizedWhenInUse:
-            errorMessage = nil
-            // Upgrade to Always if the onboarding requested it
-            if pendingAlwaysUpgrade {
-                pendingAlwaysUpgrade = false
-                manager.requestAlwaysAuthorization()
-                return
+            switch self.authorizationStatus {
+            case .authorizedWhenInUse:
+                self.errorMessage = nil
+                // Upgrade to Always if the onboarding requested it
+                if self.pendingAlwaysUpgrade {
+                    self.pendingAlwaysUpgrade = false
+                    manager.requestAlwaysAuthorization()
+                    return
+                }
+                if self.isTracking {
+                    self.startLocationUpdates()
+                } else if UserDefaults.standard.bool(forKey: Self.trackingKey) {
+                    self.isTracking = true
+                    self.startLocationUpdates()
+                }
+            case .authorizedAlways:
+                self.errorMessage = nil
+                self.pendingAlwaysUpgrade = false
+                if self.isTracking {
+                    self.startLocationUpdates()
+                } else if UserDefaults.standard.bool(forKey: Self.trackingKey) {
+                    self.isTracking = true
+                    self.startLocationUpdates()
+                }
+            case .denied, .restricted:
+                self.errorMessage = "Location permission denied. Enable it in Settings > Privacy & Security > Location Services."
+                self.isTracking = false
+                UserDefaults.standard.set(false, forKey: Self.trackingKey)
+            default:
+                break
             }
-            if isTracking {
-                startLocationUpdates()
-            } else if UserDefaults.standard.bool(forKey: Self.trackingKey) {
-                isTracking = true
-                startLocationUpdates()
-            }
-        case .authorizedAlways:
-            errorMessage = nil
-            pendingAlwaysUpgrade = false
-            if isTracking {
-                startLocationUpdates()
-            } else if UserDefaults.standard.bool(forKey: Self.trackingKey) {
-                isTracking = true
-                startLocationUpdates()
-            }
-        case .denied, .restricted:
-            errorMessage = "Location permission denied. Enable it in Settings > Privacy & Security > Location Services."
-            isTracking = false
-            UserDefaults.standard.set(false, forKey: Self.trackingKey)
-        default:
-            break
         }
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latest = locations.last else {
             return
         }
 
-        lastLocation = latest
-        onLocationUpdate?(latest)
+        Task { @MainActor in
+            self.lastLocation = latest
+            self.onLocationUpdate?(latest)
+        }
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        guard let locationError = error as? CLError else {
-            errorMessage = error.localizedDescription
-            return
-        }
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        Task { @MainActor in
+            guard let locationError = error as? CLError else {
+                self.errorMessage = error.localizedDescription
+                return
+            }
 
-        switch locationError.code {
-        case .locationUnknown:
-            return
-        case .denied:
-            errorMessage = "Location permission denied. Enable it in Settings > Privacy & Security > Location Services."
-            isTracking = false
-        default:
-            errorMessage = locationError.localizedDescription
+            switch locationError.code {
+            case .locationUnknown:
+                return
+            case .denied:
+                self.errorMessage = "Location permission denied. Enable it in Settings > Privacy & Security > Location Services."
+                self.isTracking = false
+            default:
+                self.errorMessage = locationError.localizedDescription
+            }
         }
     }
 }

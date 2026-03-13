@@ -313,7 +313,7 @@ struct ContentView: View {
             .onAppear {
                 startQuickTutorialIfNeeded()
             }
-            .onChange(of: hasSeenOnboarding) { _, _ in
+            .onChange(of: hasSeenOnboarding) { _ in
                 startQuickTutorialIfNeeded()
             }
         }
