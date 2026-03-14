@@ -88,10 +88,11 @@ def parse_path(path):
     state = m.group(1)
     token = path[:m.start()]
     raw = re.sub(r'_+', ' ', token).strip()
-    has_co = raw.lower().endswith(" co")
+    raw_lower = raw.lower()
+    has_explicit_county_suffix = raw_lower.endswith(" co") or raw_lower.endswith(" county")
     name = normalized_county_name(raw)
     name = canonicalize_dc(name, state)
-    if not has_co and (name.lower(), state.upper()) in COLLISION_SET:
+    if not has_explicit_county_suffix and (name.lower(), state.upper()) in COLLISION_SET:
         name = name + " city"
     return name, state
 

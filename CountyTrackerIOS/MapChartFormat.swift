@@ -67,9 +67,11 @@ enum MapChartPath {
         let raw = token.replacingOccurrences(of: #"_+"#, with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Check if the raw token explicitly carries a " Co" suffix (MapChart's way
-        // of marking the county side of a name collision, e.g. "St Louis Co" vs "St Louis").
-        let hasCoSuffix = raw.lowercased().hasSuffix(" co")
+        // Check if the raw token explicitly carries a county suffix (MapChart's way
+        // of marking the county side of a name collision, e.g. "St Louis Co" or
+        // "Baltimore County" vs the city token).
+        let rawLower = raw.lowercased()
+        let hasExplicitCountySuffix = rawLower.hasSuffix(" co") || rawLower.hasSuffix(" county")
 
         var name = CountyNameNormalizer.normalizedCountyName(raw) // strips " co", " county" etc.
         guard !name.isEmpty else { return nil }
@@ -78,8 +80,8 @@ enum MapChartPath {
         name = CountyNameNormalizer.canonicalizeDC(name: name, state: stateCode)
 
         // For collision pairs (same name exists as both city and county in the same state),
-        // if there is NO explicit " Co" suffix this is the city variant.
-        if !hasCoSuffix {
+        // if there is NO explicit county suffix this is the city variant.
+        if !hasExplicitCountySuffix {
             let collision = CountyNameNormalizer.CityCollision(name.lowercased(), stateCode.uppercased())
             if CountyNameNormalizer.cityCountyCollisions.contains(collision) {
                 name = name + " city"
