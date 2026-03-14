@@ -351,6 +351,7 @@ final class CountyLabelAnnotationView: MKAnnotationView {
 
     private let label = UILabel()
     private var themeColor: UIColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 1.0)
+    private var isSuppressed = false
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
@@ -370,8 +371,12 @@ final class CountyLabelAnnotationView: MKAnnotationView {
         themeColor = color
     }
 
+    func setSuppressed(_ suppressed: Bool) {
+        isSuppressed = suppressed
+    }
+
     func update(span: Double) {
-        isHidden = span > Self.hideAboveSpan
+        isHidden = isSuppressed || span > Self.hideAboveSpan
         guard !isHidden else { return }
 
         let name     = (annotation?.title ?? nil) ?? ""

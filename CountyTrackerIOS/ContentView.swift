@@ -14,6 +14,7 @@ struct ContentView: View {
     @AppStorage("hasSeenLocationOnboarding") private var hasSeenOnboarding = false
     @AppStorage("hasSeenQuickTutorial") private var hasSeenQuickTutorial = false
     @AppStorage("hasCompletedSupportPurchase") private var hasCompletedSupportPurchase = false
+    @AppStorage("showTerritories") private var showTerritories = true
 
     @State private var isImporting = false
     @State private var isImportInProgress = false
@@ -49,6 +50,28 @@ struct ContentView: View {
         GlassPalette(theme: themeSettings)
     }
 
+    private var territoryStateCodes: Set<String> {
+        ["AS", "GU", "MP", "PR", "VI"]
+    }
+
+    private var displayedVisitedCounties: Int {
+        if showTerritories { return store.totalUniqueCounties }
+        return store.visits.filter { !territoryStateCodes.contains($0.stateCode.uppercased()) }.count
+    }
+
+    private var displayedTotalCounties: Int {
+        showTerritories ? 3232 : 3143
+    }
+
+    private var mapVisitedKeys: Set<String> {
+        if showTerritories { return Set(store.visits.map { $0.key }) }
+        return Set(
+            store.visits
+                .filter { !territoryStateCodes.contains($0.stateCode.uppercased()) }
+                .map { $0.key }
+        )
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -62,7 +85,8 @@ struct ContentView: View {
                 ScrollView {
                     VStack(spacing: 14) {
                         VisitedCountyMapView(
-                            visitedKeys: Set(store.visits.map { $0.key }),
+                            visitedKeys: mapVisitedKeys,
+                            showTerritories: showTerritories,
                             userLocation: locationService.lastLocation?.coordinate,
                             resetMapZoom: $resetMapZoom,
                             theme: themeSettings.selectedTheme,
@@ -79,14 +103,18 @@ struct ContentView: View {
                                 Text("Counties")
                                     .font(.caption)
                                     .foregroundStyle(palette.secondaryText)
-                                let total = 3232
-                                let visited = store.totalUniqueCounties
+                                let total = displayedTotalCounties
+                                let visited = displayedVisitedCounties
                                 let pct = total > 0 ? Int((Double(visited) / Double(total) * 100).rounded()) : 0
                                 Text("\(visited)/\(total.formatted())  \(pct)%")
                                     .font(.title3)
                                     .fontWeight(.bold)
                             }
                             Spacer()
+                            Button(showTerritories ? "Hide Territories" : "Show Territories") {
+                                showTerritories.toggle()
+                            }
+                            .buttonStyle(.bordered)
                             Menu("Theme") {
                                 ForEach(AppTheme.allCases) { theme in
                                     Button(themeLabel(theme)) {
