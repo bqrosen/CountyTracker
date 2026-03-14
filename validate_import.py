@@ -61,7 +61,7 @@ def county_key(country, state, name):
 
 COLLISION_SET = {
     ("st louis", "MO"), ("baltimore", "MD"), ("fairfax", "VA"),
-    ("bedford", "VA"), ("franklin", "VA"), ("richmond", "VA"), ("roanoke", "VA"),
+    ("franklin", "VA"), ("richmond", "VA"), ("roanoke", "VA"),
 }
 
 CANONICAL_COUNTY_NAME_BY_STATE_AND_NAME = {

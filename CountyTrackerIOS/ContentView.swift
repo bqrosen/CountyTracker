@@ -79,7 +79,7 @@ struct ContentView: View {
                                 Text("Counties")
                                     .font(.caption)
                                     .foregroundStyle(palette.secondaryText)
-                                let total = 3244
+                                let total = 3232
                                 let visited = store.totalUniqueCounties
                                 let pct = total > 0 ? Int((Double(visited) / Double(total) * 100).rounded()) : 0
                                 Text("\(visited)/\(total.formatted())  \(pct)%")
