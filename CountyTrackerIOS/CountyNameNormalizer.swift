@@ -58,8 +58,29 @@ enum CountyNameNormalizer {
 
     static func countyKey(countryCode: String, stateCode: String, countyName: String) -> String {
         let code = stateAbbreviation(for: stateCode) ?? stateCode
-        return "\(countryCode)-\(code)-\(normalizedCountyName(countyName))".lowercased()
+        let canonical = canonicalCountyName(normalizedCountyName(countyName), stateCode: code)
+        return "\(countryCode)-\(code)-\(canonical)".lowercased()
     }
+
+    private static func canonicalCountyName(_ normalizedName: String, stateCode: String) -> String {
+        let state = stateCode.uppercased()
+        let lookup = "\(state)|\(normalizedName.lowercased())"
+        return canonicalCountyNameByStateAndName[lookup] ?? normalizedName
+    }
+
+    private static let canonicalCountyNameByStateAndName: [String: String] = [
+        "VI|st croix": "Saint Croix",
+        "VI|st john": "Saint John",
+        "VI|st thomas": "Saint Thomas",
+        "AK|wade hampton": "Kusilvak",
+        "AK|southeast fairbanks": "SE Fairbanks",
+        "AK|chugach": "Copper River",
+        "SD|shannon": "Oglala Lakota",
+        "LA|la salle": "LaSalle",
+        "IL|lasalle": "La Salle",
+        "NM|do a ana": "Dona Ana",
+        "MO|ste genevieve": "Sainte Genevieve",
+    ]
 
     /// Convert a full state name (e.g. "Missouri") to its 2-letter code ("MO").
     /// If the input is already a 2-letter code, returns it as-is.

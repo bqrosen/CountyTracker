@@ -55,10 +55,6 @@ enum MapChartPath {
         let s = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !s.isEmpty else { return nil }
 
-        if let alias = MapChartTemplateOverrides.parseAliases[s] {
-            return alias
-        }
-
         // Match the last __ followed by exactly 2 uppercase letters at end of string
         guard let range = s.range(of: #"__([A-Z]{2})$"#, options: .regularExpression) else {
             return nil
