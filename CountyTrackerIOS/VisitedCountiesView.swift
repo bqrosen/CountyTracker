@@ -6,11 +6,14 @@ import UniformTypeIdentifiers
 
 struct VisitedCountyMapView: UIViewRepresentable {
     let visitedKeys: Set<String>
+    let showTerritories: Bool
     var userLocation: CLLocationCoordinate2D?
     @Binding var resetMapZoom: Bool
     let theme: AppTheme
     var onCoordinatorReady: ((Coordinator) -> Void)?
     @EnvironmentObject private var themeSettings: ThemeSettings
+
+    private static let territoryStateCodes: Set<String> = ["AS", "GU", "MP", "PR", "VI"]
 
     // ~50-mile radius span (~0.725° each direction)
     private static let localSpan = MKCoordinateSpan(latitudeDelta: 1.45, longitudeDelta: 1.45)
@@ -19,6 +22,17 @@ struct VisitedCountyMapView: UIViewRepresentable {
         center: CLLocationCoordinate2D(latitude: 38.5, longitude: -96.0),
         span: MKCoordinateSpan(latitudeDelta: 28.0, longitudeDelta: 62.0)
     )
+
+    static func isTerritoryCountyKey(_ key: String?) -> Bool {
+        guard let key else { return false }
+        let lower = key.lowercased()
+        return territoryStateCodes.contains { lower.hasPrefix("us-\($0.lowercased())-") }
+    }
+
+    static func isTerritoryAnnotation(_ annotation: MKAnnotation) -> Bool {
+        let state = ((annotation.subtitle ?? nil) ?? "").uppercased()
+        return territoryStateCodes.contains(state)
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -40,6 +54,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         // Seed so first updateUIView doesn't trigger an unnecessary reload
         context.coordinator.lastVisitedKeys = visitedKeys
         context.coordinator.lastTheme = theme
+        context.coordinator.lastShowTerritories = showTerritories
 
         let longPress = UILongPressGestureRecognizer(
             target: context.coordinator,
@@ -62,6 +77,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     mapView.addOverlays(borderPolygons, level: .aboveRoads)
                     mapView.addAnnotations(annotations)
                     context.coordinator.overlaysLoaded = true
+                    context.coordinator.refreshAnnotationVisibility(on: mapView)
                 }
             } catch {
                 print("VisitedCountyMapView: failed to load – \(error)")
@@ -78,17 +94,29 @@ struct VisitedCountyMapView: UIViewRepresentable {
             context.coordinator.hasCenteredOnOpen = true
             mapView.setRegion(MKCoordinateRegion(center: coord, span: VisitedCountyMapView.localSpan), animated: true)
         }
+
         if visitedKeys != context.coordinator.lastVisitedKeys {
             context.coordinator.lastVisitedKeys = visitedKeys
             if context.coordinator.overlaysLoaded {
                 context.coordinator.refreshRenderers(on: mapView)
             }
-        } else if theme != context.coordinator.lastTheme {
+        }
+
+        if theme != context.coordinator.lastTheme {
             context.coordinator.lastTheme = theme
             if context.coordinator.overlaysLoaded {
                 context.coordinator.refreshRenderers(on: mapView)
             }
         }
+
+        if showTerritories != context.coordinator.lastShowTerritories {
+            context.coordinator.lastShowTerritories = showTerritories
+            if context.coordinator.overlaysLoaded {
+                context.coordinator.refreshRenderers(on: mapView)
+                context.coordinator.refreshAnnotationVisibility(on: mapView)
+            }
+        }
+
         if resetMapZoom {
             let region: MKCoordinateRegion
             if let coord = userLocation {
@@ -107,6 +135,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         var mapView: MKMapView?
         var lastVisitedKeys: Set<String> = []
         var lastTheme: AppTheme = .system
+        var lastShowTerritories = true
         var hasCenteredOnOpen = false
         var currentSpan: Double = 28.0
         private var lastStrokeVisibility = true  // true = strokes visible (span <= 20.0)
@@ -130,12 +159,12 @@ struct VisitedCountyMapView: UIViewRepresentable {
             mapView.showsUserLocation = false
             userLocationView?.isHidden = true
             mapView.layoutIfNeeded()
-            
+
             let renderer = UIGraphicsImageRenderer(size: mapView.bounds.size)
             let image = renderer.image { _ in
                 mapView.drawHierarchy(in: mapView.bounds, afterScreenUpdates: true)
             }
-            
+
             userLocationView?.isHidden = wasUserLocationViewHidden
             mapView.showsUserLocation = wasShowingUserLocation
             return image
@@ -190,6 +219,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         mapView.addOverlays(borderPolygons, level: .aboveRoads)
                         mapView.addAnnotations(annotations)
                         self.overlaysLoaded = true
+                        self.refreshAnnotationVisibility(on: mapView)
                     }
                 } catch {
                     print("VisitedCountyMapView: reload failed – \(error)")
@@ -213,11 +243,26 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     renderer.setNeedsDisplay()
                 } else if let polygon = overlay as? MKPolygon,
                           let renderer = mapView.renderer(for: overlay) as? MKPolygonRenderer {
+                    let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(polygon.title)
                     let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
-                    renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                    renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : .clear
+                    if !parent.showTerritories && isTerritory {
+                        renderer.fillColor = .clear
+                        renderer.strokeColor = .clear
+                    } else {
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : .clear
+                    }
                     renderer.setNeedsDisplay()
                 }
+            }
+        }
+
+        func refreshAnnotationVisibility(on mapView: MKMapView) {
+            for annotation in mapView.annotations {
+                guard let view = mapView.view(for: annotation) as? CountyLabelAnnotationView else { continue }
+                let hideTerritory = !parent.showTerritories && VisitedCountyMapView.isTerritoryAnnotation(annotation)
+                view.setSuppressed(hideTerritory)
+                view.update(span: mapView.region.span.latitudeDelta)
             }
         }
 
@@ -240,7 +285,6 @@ struct VisitedCountyMapView: UIViewRepresentable {
             }
         }
 
-
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             // US national border — kept as MKMultiPolygon so MapKit uses a single
             // combined bounding rect and avoids clipping at near-maximum zoom out.
@@ -257,11 +301,16 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
                 let fillColor = UIColor(parent.themeSettings.mapFillColor)
-                // County: visited get filled, all show stroke only when zoomed in
+                let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(polygon.title)
                 let isVisited = parent.visitedKeys.contains(polygon.title ?? "")
-                renderer.fillColor   = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
-                renderer.lineWidth   = 1.5
+                if !parent.showTerritories && isTerritory {
+                    renderer.fillColor = .clear
+                    renderer.strokeColor = .clear
+                } else {
+                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                    renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
+                }
+                renderer.lineWidth = 1.5
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
@@ -288,6 +337,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                        ?? CountyLabelAnnotationView(annotation: annotation, reuseIdentifier: id)
             view.annotation = annotation
             view.setThemeColor(UIColor(parent.themeSettings.mapStrokeColor))
+            let hideTerritory = !parent.showTerritories && VisitedCountyMapView.isTerritoryAnnotation(annotation)
+            view.setSuppressed(hideTerritory)
             view.update(span: mapView.region.span.latitudeDelta)
             return view
         }
