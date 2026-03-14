@@ -5,7 +5,7 @@ county polygon in the app's counties.json GeoJSON bundle.
 
 Usage: python3 validate_import.py [mapchartfile]
 """
-import json, re, sys
+import json, re, sys, unicodedata
 
 MAPCHART_FILE = sys.argv[1] if len(sys.argv) > 1 else \
     "/Users/bqrosen/Library/Mobile Documents/com~apple~CloudDocs/mapchartSave__usa_counties__visited_260301.txt"
@@ -38,6 +38,7 @@ def normalized_county_name(value):
         if lo.endswith(s):
             text = text[:-len(s)]
             break
+    text = ''.join(c for c in unicodedata.normalize('NFKD', text) if not unicodedata.combining(c))
     # strip non-alphanumeric except space
     filtered = re.sub(r'[^a-zA-Z0-9 ]', ' ', text)
     return re.sub(r'\s+', ' ', filtered).strip()
