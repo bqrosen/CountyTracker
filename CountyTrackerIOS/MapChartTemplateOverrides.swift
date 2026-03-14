@@ -7,6 +7,7 @@ enum MapChartTemplateOverrides {
         "us-al-st clair": "St__Clair__AL",
         "us-ar-st francis": "St__Francis__AR",
         "us-as-manu a": "Manuʻa__AS",
+        "us-ak-copper river": "Copper_River__AK",
         "us-dc-district of columbia": "Washington__DC",
         "us-fl-st johns": "St__Johns__FL",
         "us-fl-st lucie": "St__Lucie__FL",
