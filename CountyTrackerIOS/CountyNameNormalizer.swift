@@ -73,7 +73,6 @@ enum CountyNameNormalizer {
         "VI|st thomas": "Saint Thomas",
         "AK|wade hampton": "Kusilvak",
         "AK|southeast fairbanks": "SE Fairbanks",
-        "AK|chugach": "Copper River",
         "SD|shannon": "Oglala Lakota",
         "LA|la salle": "LaSalle",
         "IL|lasalle": "La Salle",
