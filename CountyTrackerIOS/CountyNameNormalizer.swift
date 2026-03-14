@@ -7,7 +7,6 @@ enum CountyNameNormalizer {
         CityCollision("st louis", "MO"),
         CityCollision("baltimore", "MD"),
         CityCollision("fairfax",   "VA"),
-        CityCollision("bedford",   "VA"),
         CityCollision("franklin",  "VA"),
         CityCollision("richmond",  "VA"),
         CityCollision("roanoke",   "VA"),
