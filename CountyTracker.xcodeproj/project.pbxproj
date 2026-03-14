@@ -10,6 +10,7 @@
 		085B4D5BBF937BBEE24F6C6D /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0EE401C8012ADB838AA44E /* LocationService.swift */; };
 		0DABED5DCD61D7F7874E5AA3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A90ABC78841EC3EFAD5411C /* ContentView.swift */; };
 		12F0B9AA5E3DC0D472236051 /* MapChartFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */; };
+		1F2A3B4C5D6E7F8091A2B3C4 /* MapChartTemplateOverrides.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F7E6D5C4B3A2910F1E2D3C4 /* MapChartTemplateOverrides.swift */; };
 		1391379775B654A856F7AF09 /* county_centroids.json in Resources */ = {isa = PBXBuildFile; fileRef = D424748F3E548E45F4BE6AF9 /* county_centroids.json */; };
 		2AEBC015CE05DF2AC7E4E286 /* us_border.geojson in Resources */ = {isa = PBXBuildFile; fileRef = 619B03B12614F22C9C50AEA4 /* us_border.geojson */; };
 		5EC1C723F47290D2B46C2BD5 /* CountyTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5536512D3E514142626DFEA0 /* CountyTrackerApp.swift */; };
@@ -35,6 +36,7 @@
 		619B03B12614F22C9C50AEA4 /* us_border.geojson */ = {isa = PBXFileReference; lastKnownFileType = text; path = us_border.geojson; sourceTree = "<group>"; };
 		67F6C5E7FDB3A4A0F2453B72 /* CountyNameNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyNameNormalizer.swift; sourceTree = "<group>"; };
 		6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapChartFormat.swift; sourceTree = "<group>"; };
+		8F7E6D5C4B3A2910F1E2D3C4 /* MapChartTemplateOverrides.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapChartTemplateOverrides.swift; sourceTree = "<group>"; };
 		8C898E9CD52AC834CA19A557 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADE1C7CB1F99C4743A5A6988 /* ThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettings.swift; sourceTree = "<group>"; };
 		B5B74288FD2DDC198AB0EF4B /* counties.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = counties.json; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 				C30CD17F426B396FB2709973 /* LiquidGlassStyle.swift */,
 				CA0EE401C8012ADB838AA44E /* LocationService.swift */,
 				6B27FF7880F8E4A25D346D36 /* MapChartFormat.swift */,
+				8F7E6D5C4B3A2910F1E2D3C4 /* MapChartTemplateOverrides.swift */,
 				ADE1C7CB1F99C4743A5A6988 /* ThemeSettings.swift */,
 				F1EB2B85AAEC1C8C55CC6F8A /* TipJarStore.swift */,
 				619B03B12614F22C9C50AEA4 /* us_border.geojson */,
@@ -173,6 +176,7 @@
 				716CAAFB2D8AE631FEA4E57F /* LiquidGlassStyle.swift in Sources */,
 				085B4D5BBF937BBEE24F6C6D /* LocationService.swift in Sources */,
 				12F0B9AA5E3DC0D472236051 /* MapChartFormat.swift in Sources */,
+				1F2A3B4C5D6E7F8091A2B3C4 /* MapChartTemplateOverrides.swift in Sources */,
 				880DB92D9FA93DEBAFF7B5FE /* ThemeSettings.swift in Sources */,
 				9CA49AA157EEE65EA5DB7E75 /* TipJarStore.swift in Sources */,
 				72349F9389FA75D6611BE9DC /* VisitedCountiesView.swift in Sources */,
