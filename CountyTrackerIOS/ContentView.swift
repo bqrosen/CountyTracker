@@ -60,7 +60,7 @@ struct ContentView: View {
     }
 
     private var displayedTotalCounties: Int {
-        showTerritories ? 3232 : 3143
+        showTerritories ? 3233 : 3144
     }
 
     private var mapVisitedKeys: Set<String> {
