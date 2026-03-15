@@ -8,6 +8,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
     let visitedKeys: Set<String>
     let showTerritories: Bool
     var userLocation: CLLocationCoordinate2D?
+    let isTracking: Bool
     @Binding var resetMapZoom: Bool
     let theme: AppTheme
     var onCoordinatorReady: ((Coordinator) -> Void)?
@@ -117,6 +118,9 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 context.coordinator.refreshAnnotationVisibility(on: mapView)
             }
         }
+
+        // Hide GPS icon when not tracking
+        mapView.showsUserLocation = isTracking
 
         if resetMapZoom {
             let region: MKCoordinateRegion
