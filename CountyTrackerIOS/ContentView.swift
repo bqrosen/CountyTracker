@@ -441,7 +441,7 @@ struct ContentView: View {
         }
     }
 
-    private let themeLabel: (AppTheme) -> String = { theme in
+    private func themeLabel(_ theme: AppTheme) -> String {
         return themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
     }
 
