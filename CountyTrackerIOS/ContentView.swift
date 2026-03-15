@@ -39,6 +39,10 @@ struct ContentView: View {
     @State private var tutorialStepIndex: Int?
     @State private var isTutorialRunning = false
     @State private var shouldAdvanceTutorial = false
+    @State private var cachedPalette: GlassPalette?
+    @State private var lastPaletteTheme: AppTheme?
+    @State private var cachedMapKeys: Set<String>?
+    @State private var lastShowTerritoriesForKeys: Bool?
     @StateObject private var tipJarStore = TipJarStore()
 
     private let quickTutorialSteps = [
@@ -55,7 +59,12 @@ struct ContentView: View {
     }()
 
     private var palette: GlassPalette {
-        GlassPalette(theme: themeSettings)
+        // Memoize palette creation - only create if theme changed
+        if lastPaletteTheme != themeSettings.selectedTheme {
+            cachedPalette = GlassPalette(theme: themeSettings)
+            lastPaletteTheme = themeSettings.selectedTheme
+        }
+        return cachedPalette ?? GlassPalette(theme: themeSettings)
     }
 
     private var territoryStateCodes: Set<String> {
@@ -72,12 +81,20 @@ struct ContentView: View {
     }
 
     private var mapVisitedKeys: Set<String> {
-        if showTerritories { return Set(store.visits.map { $0.key }) }
-        return Set(
-            store.visits
-                .filter { !territoryStateCodes.contains($0.stateCode.uppercased()) }
-                .map { $0.key }
-        )
+        // Memoize map keys calculation - recalculate only if territory filter changed
+        if lastShowTerritoriesForKeys != showTerritories {
+            if showTerritories {
+                cachedMapKeys = Set(store.visits.map { $0.key })
+            } else {
+                cachedMapKeys = Set(
+                    store.visits
+                        .filter { !territoryStateCodes.contains($0.stateCode.uppercased()) }
+                        .map { $0.key }
+                )
+            }
+            lastShowTerritoriesForKeys = showTerritories
+        }
+        return cachedMapKeys ?? Set(store.visits.map { $0.key })
     }
 
     @Environment(\.verticalSizeClass) private var verticalSizeClass
