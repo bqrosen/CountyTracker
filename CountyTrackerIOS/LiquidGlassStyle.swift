@@ -38,7 +38,7 @@ struct GlassPalette {
             backgroundGradientTop = theme.outrunBackground
             backgroundGradientBottom = theme.outrunSecondaryBackground
             cardFill = AnyShapeStyle(theme.outrunCardBackground.opacity(0.80))
-            cardStroke = theme.outrunAccent.opacity(0.50)
+            cardStroke = theme.outrunCardStroke.opacity(0.70)
             rowFill = theme.outrunCardBackground.opacity(0.9)
         case .cyber:
             primaryText = theme.cyberPrimaryText

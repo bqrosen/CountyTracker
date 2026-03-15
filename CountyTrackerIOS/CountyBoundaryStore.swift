@@ -343,15 +343,16 @@ actor CountyBoundaryLoader {
 final class CountyLabelAnnotationView: MKAnnotationView {
 
     // Zoom thresholds (map latitudeDelta in degrees)
-    static let hideAboveSpan: Double  = 7.0
+    static let hideAboveSpan: Double  = 4.0
     static let maxFontSpan:   Double  = 0.3    // fully zoomed in  → largest font
-    static let minFontSpan:   Double  = 7.0    // just before hide → smallest font
+    static let minFontSpan:   Double  = 4.0    // just before hide → smallest font
     static let maxFontSize:   CGFloat = 14
     static let minFontSize:   CGFloat = 7
 
     private let label = UILabel()
     private var themeColor: UIColor = UIColor(red: 191/255, green: 97/255, blue: 106/255, alpha: 1.0)
     private var isSuppressed = false
+    private var currentSpan: Double = 7.0
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
@@ -371,11 +372,32 @@ final class CountyLabelAnnotationView: MKAnnotationView {
         themeColor = color
     }
 
+    func updateTextColor(_ color: UIColor) {
+        themeColor = color
+        if !isHidden {
+            let name     = (annotation?.title ?? nil) ?? ""
+            let state    = (annotation?.subtitle ?? nil) ?? ""
+            let label_text = state.isEmpty ? name : "\(name), \(state)"
+            let fontSize = Self.fontSize(for: currentSpan)
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font:            UIFont.systemFont(ofSize: fontSize, weight: .semibold),
+                .foregroundColor: themeColor
+            ]
+            label.attributedText = NSAttributedString(string: label_text, attributes: attrs)
+            updateShadow()
+            label.sizeToFit()
+            bounds       = label.bounds
+            label.frame  = bounds
+            centerOffset = .zero
+        }
+    }
+
     func setSuppressed(_ suppressed: Bool) {
         isSuppressed = suppressed
     }
 
     func update(span: Double) {
+        currentSpan = span
         isHidden = isSuppressed || span > Self.hideAboveSpan
         guard !isHidden else { return }
 
