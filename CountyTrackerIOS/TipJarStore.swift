@@ -31,7 +31,7 @@ final class TipJarStore: ObservableObject {
         do {
             let fetched = try await Product.products(for: productIDs)
             products = fetched.sorted {
-                NSDecimalNumber(decimal: $0.price).doubleValue < NSDecimalNumber(decimal: $1.price).doubleValue
+                if Double($0.price) < Double($1.price) {
             }
             if products.isEmpty {
                 loadErrorMessage = "No tip products found. Verify product IDs in App Store Connect."

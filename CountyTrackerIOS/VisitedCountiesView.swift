@@ -132,15 +132,15 @@ struct VisitedCountyMapView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
-        var parent: VisitedCountyMapView
-        var mapView: MKMapView?
-        var lastVisitedKeys: Set<String> = []
-        var lastTheme: AppTheme = .system
-        var lastShowTerritories = true
-        var hasCenteredOnOpen = false
-        var currentSpan: Double = 28.0
-        private var lastStrokeVisibility = true  // true = strokes visible (span <= 10.0)
-        var overlaysLoaded = false
+        private var parent: VisitedCountyMapView
+        private var mapView: MKMapView?
+        private var lastVisitedKeys: Set<String> = []
+        private var lastTheme: AppTheme = .system
+        private var lastShowTerritories = true
+        private var hasCenteredOnOpen = false
+        private var currentSpan: Double = 28.0
+        private var lastStrokeVisibility = true
+        private var overlaysLoaded = false
 
         init(_ parent: VisitedCountyMapView) {
             self.parent = parent

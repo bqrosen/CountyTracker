@@ -5,6 +5,13 @@ import UniformTypeIdentifiers
 import Photos
 import StoreKit
 
+// MARK: - Timing Constants
+private enum TimingConstants {
+    static let tutorialInitialDelay: UInt64 = 500_000_000           // 0.5s: allow onboarding animations to finish
+    static let tutorialPollInterval: UInt64 = 50_000_000            // 50ms: check for user input frequently
+    static let importCompletionDisplayDuration: UInt64 = 180_000_000 // 0.18s: show import completion message briefly
+}
+
 struct ContentView: View {
     @EnvironmentObject private var viewModel: CountyTrackerViewModel
     @EnvironmentObject private var locationService: LocationService
@@ -417,8 +424,8 @@ struct ContentView: View {
         }
     }
 
-    private func themeLabel(_ theme: AppTheme) -> String {
-        themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
+    private let themeLabel: (AppTheme) -> String = { theme in
+        return themeSettings.selectedTheme == theme ? "✓ \(theme.displayName)" : theme.displayName
     }
 
     private func exportMapToPhotos() {
@@ -541,7 +548,7 @@ struct ContentView: View {
 
         Task { @MainActor in
             // Initial delay to let onboarding animations settle
-            try? await Task.sleep(nanoseconds: 500_000_000)
+            try? await Task.sleep(nanoseconds: TimingConstants.tutorialInitialDelay)
             
             for index in quickTutorialSteps.indices {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -551,7 +558,7 @@ struct ContentView: View {
                 
                 // Wait for tap/swipe to advance
                 while !shouldAdvanceTutorial {
-                    try? await Task.sleep(nanoseconds: 50_000_000)  // Check every 50ms
+                    try? await Task.sleep(nanoseconds: TimingConstants.tutorialPollInterval)
                 }
             }
 
