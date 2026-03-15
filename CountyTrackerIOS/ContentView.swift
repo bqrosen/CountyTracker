@@ -156,6 +156,7 @@ struct ContentView: View {
                             visitedKeys: mapVisitedKeys,
                             showTerritories: showTerritories,
                             userLocation: locationService.lastLocation?.coordinate,
+                            isTracking: locationService.isTracking,
                             resetMapZoom: $resetMapZoom,
                             theme: themeSettings.selectedTheme,
                             onCoordinatorReady: { coordinator in
@@ -173,6 +174,7 @@ struct ContentView: View {
                                 visitedKeys: mapVisitedKeys,
                                 showTerritories: showTerritories,
                                 userLocation: locationService.lastLocation?.coordinate,
+                                isTracking: locationService.isTracking,
                                 resetMapZoom: $resetMapZoom,
                                 theme: themeSettings.selectedTheme,
                                 onCoordinatorReady: { coordinator in
