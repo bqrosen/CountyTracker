@@ -31,6 +31,7 @@ struct ContentView: View {
     @State private var isTipJarPresented = false
     @State private var tutorialStepIndex: Int?
     @State private var isTutorialRunning = false
+    @State private var shouldAdvanceTutorial = false
     @StateObject private var tipJarStore = TipJarStore()
 
     private let quickTutorialSteps = [
@@ -72,6 +73,8 @@ struct ContentView: View {
         )
     }
 
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -82,8 +85,49 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 14) {
+                if verticalSizeClass == .compact {
+                    // Landscape mode: button bar on left side (non-rotated)
+                    HStack(spacing: 2) {
+                        // Left side: button controls
+                        VStack(alignment: .leading, spacing: 8) {
+                            Menu {
+                                Button("Import mapchart.net style File") {
+                                    isImporting = true
+                                }
+                                .font(.caption)
+                                Button("Export mapchart.net style File") {
+                                    do {
+                                        exportDocument = MapChartTextDocument(text: try store.exportMapChartText())
+                                        isExporting = true
+                                    } catch {
+                                        alertMessage = "Export failed: \(error.localizedDescription)"
+                                    }
+                                }
+                                .font(.caption)
+                                Button("Save Map to Photos") {
+                                    exportMapToPhotos()
+                                }
+                                .font(.caption)
+                            } label: {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.title3)
+                            }
+                            .buttonStyle(.bordered)
+                            
+                            Button {
+                                resetMapZoom = true
+                            } label: {
+                                Image(systemName: "arrow.uturn.backward.circle")
+                                    .font(.title3)
+                            }
+                            .buttonStyle(.bordered)
+                            
+                            Spacer()
+                        }
+                        .frame(maxHeight: .infinity, alignment: .top)
+                        .padding(2)
+                        
+                        // Right side: full map
                         VisitedCountyMapView(
                             visitedKeys: mapVisitedKeys,
                             showTerritories: showTerritories,
@@ -94,163 +138,189 @@ struct ContentView: View {
                                 mapCoordinator = coordinator
                             }
                         )
-                            .frame(height: 360)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                            .glassCard(palette, cornerRadius: 22)
-
-                        HStack(spacing: 8) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Counties")
-                                    .font(.caption)
-                                    .foregroundStyle(palette.secondaryText)
-                                let total = displayedTotalCounties
-                                let visited = displayedVisitedCounties
-                                let pct = total > 0 ? Int((Double(visited) / Double(total) * 100).rounded()) : 0
-                                Text("\(visited)/\(total.formatted())  \(pct)%")
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                            }
-                            Spacer()
-                            Button(showTerritories ? "Hide Territories" : "Show Territories") {
-                                showTerritories.toggle()
-                            }
-                            .buttonStyle(.bordered)
-                            Menu("Theme") {
-                                ForEach(AppTheme.allCases) { theme in
-                                    Button(themeLabel(theme)) {
-                                        themeSettings.selectedTheme = theme
-                                    }
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                            Menu {
-                                Button("Import MapChart File") {
-                                    isImporting = true
-                                }
-                                Button("Export MapChart File") {
-                                    do {
-                                        exportDocument = MapChartTextDocument(text: try store.exportMapChartText())
-                                        isExporting = true
-                                    } catch {
-                                        alertMessage = "Export failed: \(error.localizedDescription)"
-                                    }
-                                }
-                                Button("Save Map to Photos") {
-                                    exportMapToPhotos()
-                                }
-                            } label: {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.title2)
-                            }
-                            .buttonStyle(.bordered)
-                            Button {
-                                resetMapZoom = true
-                            } label: {
-                                Image(systemName: "arrow.uturn.backward.circle")
-                                    .font(.title2)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Current County")
-                                .font(.headline)
-                            Text(viewModel.currentCountyLabel)
-                                .font(.title3)
-                                .fontWeight(.semibold)
-
-                            if let errorMessage = locationService.errorMessage {
-                                Text(errorMessage)
-                                    .font(.footnote)
-                                    .foregroundStyle(.red)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(14)
-                        .glassCard(palette)
-
-                        HStack(spacing: 8) {
-                            Button(locationService.isTracking ? "Tracking" : "Start") {
-                                viewModel.startTracking()
-                                resetMapZoom = true
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(palette.accent)
-                            .disabled(locationService.isTracking)
-
-                            Button("Stop") {
-                                viewModel.stopTracking()
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(!locationService.isTracking)
-
-                            Button("Location Settings") {
-                                locationService.openAppSettings()
-                            }
-                            .buttonStyle(.bordered)
-
-                            Button {
-                                confirmClearData = true
-                            } label: {
-                                Image(systemName: "trash")
-                                    .font(.title2)
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(store.visits.isEmpty)
-                        }
-
-                        if !hasCompletedSupportPurchase {
-                            Button {
-                                isTipJarPresented = true
-                            } label: {
-                                Label("Support CountyTracker  ☕", systemImage: "heart.fill")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Visit History")
-                                .font(.headline)
-                            List(store.visits) { visit in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(visit.displayName)
-                                        .font(.headline)
-                                        .foregroundStyle(palette.primaryText)
-                                    Text("Visits: \(visit.visitCount)")
-                                        .font(.subheadline)
-                                        .foregroundStyle(palette.secondaryText)
-                                    Text("First seen: \(dateFormatter.string(from: visit.firstVisitedAt))")
-                                        .font(.caption)
-                                        .foregroundStyle(palette.secondaryText)
-                                    Text("Last seen: \(dateFormatter.string(from: visit.lastVisitedAt))")
-                                        .font(.caption)
-                                        .foregroundStyle(palette.secondaryText)
-                                }
-                                .listRowBackground(palette.rowFill)
-                            }
-                            .frame(minHeight: 260)
-                            .listStyle(.plain)
-                            .scrollContentBackground(.hidden)
-                            .background(Color.clear)
-                        }
-                        .padding(14)
-                        .glassCard(palette)
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .padding(2)
                     }
-                    .padding()
+                } else {
+                    // Portrait mode: original vertical layout
+                    ScrollView {
+                        VStack(spacing: 14) {
+                            VisitedCountyMapView(
+                                visitedKeys: mapVisitedKeys,
+                                showTerritories: showTerritories,
+                                userLocation: locationService.lastLocation?.coordinate,
+                                resetMapZoom: $resetMapZoom,
+                                theme: themeSettings.selectedTheme,
+                                onCoordinatorReady: { coordinator in
+                                    mapCoordinator = coordinator
+                                }
+                            )
+                                .frame(height: 360)
+                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .glassCard(palette, cornerRadius: 22)
+
+                            VStack(spacing: 12) {
+                                HStack(spacing: 8) {
+                                    Button(showTerritories ? "Hide Territories" : "Show Territories") {
+                                        showTerritories.toggle()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .lineLimit(1)
+                                    Menu("Theme") {
+                                        ForEach(AppTheme.allCases) { theme in
+                                            Button(themeLabel(theme)) {
+                                                themeSettings.selectedTheme = theme
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .lineLimit(1)
+                                    Menu {
+                                        Button("Import mapchart.net style File") {
+                                            isImporting = true
+                                        }
+                                        .font(.caption)
+                                        Button("Export mapchart.net style File") {
+                                            do {
+                                                exportDocument = MapChartTextDocument(text: try store.exportMapChartText())
+                                                isExporting = true
+                                            } catch {
+                                                alertMessage = "Export failed: \(error.localizedDescription)"
+                                            }
+                                        }
+                                        .font(.caption)
+                                        Button("Save Map to Photos") {
+                                            exportMapToPhotos()
+                                        }
+                                        .font(.caption)
+                                    } label: {
+                                        Image(systemName: "square.and.arrow.up")
+                                            .font(.title2)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    Button {
+                                        resetMapZoom = true
+                                    } label: {
+                                        Image(systemName: "arrow.uturn.backward.circle")
+                                            .font(.title2)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    Spacer()
+                                }
+                                
+                                HStack(alignment: .center, spacing: 8) {
+                                    Text("Counties visited:")
+                                        .font(.headline)
+                                        .foregroundStyle(palette.secondaryText)
+                                    let total = displayedTotalCounties
+                                    let visited = displayedVisitedCounties
+                                    let pct = total > 0 ? Int((Double(visited) / Double(total) * 100).rounded()) : 0
+                                    Text("\(visited)/\(total.formatted())  \(pct)%")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Current County")
+                                    .font(.headline)
+                                Text(viewModel.currentCountyLabel)
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+
+                                if let errorMessage = locationService.errorMessage {
+                                    Text(errorMessage)
+                                        .font(.footnote)
+                                        .foregroundStyle(.red)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(14)
+                            .glassCard(palette)
+
+                            HStack(spacing: 8) {
+                                Button(locationService.isTracking ? "Stop" : "Start") {
+                                    if locationService.isTracking {
+                                        viewModel.stopTracking()
+                                    } else {
+                                        viewModel.startTracking()
+                                        resetMapZoom = true
+                                    }
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(palette.accent)
+
+                                Button("Location Settings") {
+                                    locationService.openAppSettings()
+                                }
+                                .buttonStyle(.bordered)
+
+                                Button {
+                                    confirmClearData = true
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .font(.title2)
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(store.visits.isEmpty)
+                            }
+
+                            if !hasCompletedSupportPurchase {
+                                Button {
+                                    isTipJarPresented = true
+                                } label: {
+                                    Label("Support CountyTracker  ☕", systemImage: "heart.fill")
+                                        .font(.headline)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                }
+                                .buttonStyle(.bordered)
+                            }
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Visit History")
+                                    .font(.headline)
+                                List(store.visits.sorted { $0.lastVisitedAt > $1.lastVisitedAt }) { visit in
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(visit.displayName)
+                                            .font(.headline)
+                                            .foregroundStyle(palette.primaryText)
+                                        Text("Visits: \(visit.visitCount)")
+                                            .font(.subheadline)
+                                            .foregroundStyle(palette.secondaryText)
+                                        Text("First seen: \(dateFormatter.string(from: visit.firstVisitedAt))")
+                                            .font(.caption)
+                                            .foregroundStyle(palette.secondaryText)
+                                        Text("Last seen: \(dateFormatter.string(from: visit.lastVisitedAt))")
+                                            .font(.caption)
+                                            .foregroundStyle(palette.secondaryText)
+                                    }
+                                    .listRowBackground(palette.rowFill)
+                                }
+                                .frame(minHeight: 260)
+                                .listStyle(.plain)
+                                .scrollContentBackground(.hidden)
+                                .background(Color.clear)
+                            }
+                            .padding(14)
+                            .glassCard(palette)
+                        }
+                        .padding()
+                    }
                 }
             }
             .foregroundStyle(palette.primaryText)
             .overlay(alignment: .top) {
                 if let stepIndex = tutorialStepIndex,
                    quickTutorialSteps.indices.contains(stepIndex) {
-                    QuickTutorialBanner(message: quickTutorialSteps[stepIndex])
-                        .padding(.horizontal, 16)
-                        .padding(.top, 10)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .allowsHitTesting(false)
+                    QuickTutorialBanner(message: quickTutorialSteps[stepIndex]) {
+                        shouldAdvanceTutorial = true
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
             .overlay {
@@ -467,13 +537,22 @@ struct ContentView: View {
 
         hasSeenQuickTutorial = true
         isTutorialRunning = true
+        shouldAdvanceTutorial = false
 
         Task { @MainActor in
+            // Initial delay to let onboarding animations settle
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            
             for index in quickTutorialSteps.indices {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     tutorialStepIndex = index
                 }
-                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                shouldAdvanceTutorial = false
+                
+                // Wait for tap/swipe to advance
+                while !shouldAdvanceTutorial {
+                    try? await Task.sleep(nanoseconds: 50_000_000)  // Check every 50ms
+                }
             }
 
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -488,6 +567,7 @@ struct ContentView: View {
 
 private struct QuickTutorialBanner: View {
     let message: String
+    var onAdvance: () -> Void = {}
 
     var body: some View {
         HStack(spacing: 10) {
@@ -496,6 +576,10 @@ private struct QuickTutorialBanner: View {
             Text(message)
                 .font(.subheadline)
                 .multilineTextAlignment(.leading)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .opacity(0.6)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
@@ -506,6 +590,15 @@ private struct QuickTutorialBanner: View {
                 .stroke(Color.primary.opacity(0.15), lineWidth: 1)
         )
         .shadow(radius: 6)
+        .onTapGesture(perform: onAdvance)
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width < -30 {  // Swipe left
+                        onAdvance()
+                    }
+                }
+        )
     }
 }
 

@@ -6,34 +6,13 @@ enum AppTheme: String, CaseIterable, Identifiable {
     case light
     case dark
     case nord
+    case snow
     case sepia
     case outrun
     case cyber
     case jungle
-    case snow
 
     var id: String { rawValue }
-
-    var appIconName: String? {
-        switch self {
-        case .system, .nord:
-            return nil
-        case .light:
-            return "AppIconLight"
-        case .dark:
-            return "AppIconDark"
-        case .sepia:
-            return "AppIconSepia"
-        case .outrun:
-            return "AppIconOutrun"
-        case .cyber:
-            return "AppIconCyber"
-        case .jungle:
-            return "AppIconJungle"
-        case .snow:
-            return "AppIconSnow"
-        }
-    }
 
     var displayName: String {
         switch self {
@@ -55,7 +34,6 @@ final class ThemeSettings: ObservableObject {
     @Published var selectedTheme: AppTheme {
         didSet {
             UserDefaults.standard.set(selectedTheme.rawValue, forKey: storageKey)
-            applyAppIcon(for: selectedTheme)
         }
     }
 
@@ -68,17 +46,6 @@ final class ThemeSettings: ObservableObject {
         } else {
             selectedTheme = .system
         }
-
-        applyAppIcon(for: selectedTheme)
-    }
-
-    private func applyAppIcon(for theme: AppTheme) {
-        guard UIApplication.shared.supportsAlternateIcons else { return }
-
-        let desiredIcon = theme.appIconName
-        guard UIApplication.shared.alternateIconName != desiredIcon else { return }
-
-        UIApplication.shared.setAlternateIconName(desiredIcon)
     }
 
     var preferredColorScheme: ColorScheme? {
@@ -181,7 +148,7 @@ final class ThemeSettings: ObservableObject {
     }
 
     var outrunPrimaryText: Color {
-        Color(.sRGB, red: 0.910, green: 0.957, blue: 0.973, opacity: 1)
+        Color(.sRGB, red: 1.0, green: 0.1, blue: 0.55, opacity: 1)
     }
 
     var outrunSecondaryText: Color {
@@ -189,7 +156,11 @@ final class ThemeSettings: ObservableObject {
     }
 
     var outrunAccent: Color {
-        Color(.sRGB, red: 1.0, green: 0.176, blue: 0.471, opacity: 1)
+        Color(.sRGB, red: 0.0, green: 0.9, blue: 1.0, opacity: 1)
+    }
+
+    var outrunCardStroke: Color {
+        Color(.sRGB, red: 0.0, green: 0.9, blue: 1.0, opacity: 1)
     }
 
     // MARK: - Cyber
@@ -215,7 +186,7 @@ final class ThemeSettings: ObservableObject {
     }
 
     var cyberAccent: Color {
-        Color(.sRGB, red: 0.831, green: 1.0, blue: 0.0, opacity: 1)
+        Color(.sRGB, red: 0.75, green: 0.3, blue: 1.0, opacity: 1)
     }
 
     // MARK: - Snow

@@ -106,6 +106,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
             context.coordinator.lastTheme = theme
             if context.coordinator.overlaysLoaded {
                 context.coordinator.refreshRenderers(on: mapView)
+                context.coordinator.refreshAnnotationColors(on: mapView, textColor: themeSettings.mapStrokeColor)
             }
         }
 
@@ -138,7 +139,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         var lastShowTerritories = true
         var hasCenteredOnOpen = false
         var currentSpan: Double = 28.0
-        private var lastStrokeVisibility = true  // true = strokes visible (span <= 20.0)
+        private var lastStrokeVisibility = true  // true = strokes visible (span <= 10.0)
         var overlaysLoaded = false
 
         init(_ parent: VisitedCountyMapView) {
@@ -232,7 +233,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         func refreshRenderers(on mapView: MKMapView) {
             let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
             let fillColor   = UIColor(parent.themeSettings.mapFillColor)
-            let showStrokes = currentSpan <= 20.0
+            let showStrokes = currentSpan <= 10.0
 
             for overlay in mapView.overlays {
                 // US border is now an MKMultiPolygon to prevent zoom-out clipping.
@@ -266,13 +267,21 @@ struct VisitedCountyMapView: UIViewRepresentable {
             }
         }
 
+        func refreshAnnotationColors(on mapView: MKMapView, textColor: Color) {
+            let uiColor = UIColor(textColor)
+            for annotation in mapView.annotations {
+                guard let view = mapView.view(for: annotation) as? CountyLabelAnnotationView else { continue }
+                view.updateTextColor(uiColor)
+            }
+        }
+
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             let span = mapView.region.span.latitudeDelta
             currentSpan = span
 
             // Refresh renderer stroke visibility when crossing the threshold —
             // no overlay removal needed, just update colours in-place.
-            let shouldShowStrokes = span <= 20.0
+            let shouldShowStrokes = span <= 10.0
             if shouldShowStrokes != lastStrokeVisibility {
                 lastStrokeVisibility = shouldShowStrokes
                 if overlaysLoaded {
