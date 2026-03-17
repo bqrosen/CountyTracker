@@ -189,7 +189,8 @@
 		BF83AA922C9EC71D8912C437 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				// ASSETCATALOG_COMPILER_APPICON_NAME removed; no custom app icon set
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconLight;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PVCFCVW247;
@@ -333,7 +334,8 @@
 		FDF642E7140528201B5B1152 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				// ASSETCATALOG_COMPILER_APPICON_NAME removed; no custom app icon set
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconLight;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PVCFCVW247;
