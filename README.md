@@ -49,6 +49,18 @@ com.example.countytracker.visits.[county_name] = [date_visited]
 - **Swift**: 5.0+
 - **Xcode**: 15.0+
 
+### Geographic Data Sources
+
+The app uses the following geospatial databases:
+
+- **counties.json**: GeoJSON FeatureCollection containing boundary polygons for approximately 3,200 US counties, parishes, and county-equivalents. Includes properties: NAME, STUSAB (state abbreviation), and GEOID. Used for rendering county boundaries on the map and intersection detection.
+
+- **county_centroids.json**: Geographic centroid coordinates (latitude/longitude) for each US county. Used for map display optimization and feature annotations.
+
+- **us_border.geojson**: US national boundary polygon in GeoJSON format. Provides the outer boundary reference for map rendering.
+
+These datasets are bundled with the app and do not require external API calls, ensuring offline functionality and privacy.
+
 ## License
 
 This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** license.
