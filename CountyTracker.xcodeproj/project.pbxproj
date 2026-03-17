@@ -189,7 +189,7 @@
 		BF83AA922C9EC71D8912C437 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconLight;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PVCFCVW247;
@@ -199,7 +199,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.bqrosen.CountyTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = ios.countytracker;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -333,7 +333,7 @@
 		FDF642E7140528201B5B1152 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconLight;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PVCFCVW247;
@@ -343,7 +343,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.bqrosen.CountyTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = ios.countytracker;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
