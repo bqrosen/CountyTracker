@@ -19,23 +19,6 @@ CountyTracker is an elegant, privacy-focused mobile application designed for geo
 - An iPhone/iPad running iOS 16.0 or later (for deployment)
 - An Apple Developer Account (optional, for device deployment)
 
-### Installation & Setup
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/bqrosen/CountyTracker.git
-   cd CountyTracker
-   ```
-
-2. **Open in Xcode**
-   ```bash
-   open CountyTracker.xcodeproj
-   ```
-
-3. **Select Target**
-   - In Xcode, select the `CountyTracker` scheme
-   - Choose an iPhone/iPad simulator or connected device
-
 ### Building & Running
 
 **Via Xcode:**
