@@ -10,44 +10,6 @@ CountyTracker is an elegant, privacy-focused mobile application designed for geo
 **Deployment Target:** iOS 16.0+  
 **Platform:** iPhone & iPad
 
-## Features
-
-- **Automatic County Detection**: Uses Core Location to continuously track your position and identify counties via reverse geocoding
-- **Real-Time Map Display**: Interactive map visualization showing your current location and visited counties
-- **County History**: Comprehensive list of all visited counties with visit timestamps
-- **Efficient Tracking**: Intelligent throttling of location updates and geocoding requests to minimize battery drain
-- **Privacy-First**: All data stored locally on your device; no cloud synchronization or external servers
-- **Persistent Storage**: County visit history is retained even after app closure
-- **Multi-Device Support**: Works seamlessly on iPhones and iPads
-- **In-App Support**: Integrated tip jar for supporting continued development
-
-## Project Structure
-
-```
-CountyTracker/
-├── CountyTrackerIOS/           # iOS app source code (SwiftUI)
-│   ├── CountyTrackerApp.swift   # App entry point
-│   ├── ContentView.swift         # Main UI (map + controls + list)
-│   ├── LocationService.swift     # GPS & Core Location integration
-│   ├── CountyTrackerViewModel.swift # Logic & state management
-│   ├── CountyTrackerStore.swift  # Data persistence & county logic
-│   ├── CountyVisit.swift         # County data model
-│   ├── CountyNameNormalizer.swift # County name standardization
-│   ├── CountyBoundaryStore.swift # County boundary data management
-│   ├── MapChartFormat.swift      # Map visualization utilities
-│   ├── ThemeSettings.swift       # UI theme configuration
-│   ├── LiquidGlassStyle.swift    # Custom SwiftUI styling
-│   ├── Assets.xcassets/          # App icons & images
-│   ├── counties.json             # US counties database
-│   ├── county_centroids.json     # County center coordinates
-│   ├── us_border.geojson         # US boundary geospatial data
-│   ├── Info.plist                # App configuration & permissions
-│   └── README.md                 # iOS app technical documentation
-├── CountyTracker.xcodeproj/      # Xcode project configuration
-├── LICENSE                        # CC BY-NC 4.0 License
-└── README.md                      # This file
-```
-
 ## Getting Started
 
 ### Prerequisites
@@ -85,33 +47,6 @@ CountyTracker/
 ```bash
 xcodebuild -project CountyTracker.xcodeproj -scheme CountyTracker -configuration Release -destination 'generic/platform=iOS' archive -archivePath /path/to/archive.xcarchive
 ```
-
-## Architecture
-
-### Core Components
-
-- **LocationService.swift**: Handles all GPS-related operations and permissions
-- **CountyTrackerViewModel.swift**: Manages the app state and coordinates between UI and data layers
-- **CountyTrackerStore.swift**: Persists county visits to UserDefaults; normalizes county names
-- **MapChartFormat.swift**: Renders interactive maps and spatial visualizations
-- **CountyBoundaryStore.swift**: Loads and manages GeoJSON county boundary data
-
-### Data Flow
-
-```
-GPS Location → LocationService → Reverse Geocoding → CountyNameNormalizer
-    ↓
-County Identified → CountyTrackerStore (persist to UserDefaults)
-    ↓
-CountyTrackerViewModel (update state) → ContentView (render UI)
-```
-
-### Key Features
-
-- **Update Throttling**: Location updates are throttled by time (minimum interval) and distance (minimum accuracy) to reduce battery consumption
-- **Efficient Geocoding**: Uses Apple's built-in reverse geocoding without external API calls
-- **Local Persistence**: All county visit records stored locally using UserDefaults; no cloud sync
-- **County Normalization**: Handles county name variations and standardizes to official US county names
 
 ## Technical Details
 
