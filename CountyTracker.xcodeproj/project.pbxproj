@@ -3,6 +3,20 @@
 	archiveVersion = 1;
 	classes = {
 	};
+
+		901ABCDEF123456789012345 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 19BC49049645468723EBB157 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5AED0852EF1EB248AB9EA9D9;
+			remoteInfo = CountyTracker;
+		};
+
+		0A1ABCDEF123456789012345 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5AED0852EF1EB248AB9EA9D9;
+			targetProxy = 901ABCDEF123456789012345 /* PBXContainerItemProxy */;
+		};
 	objectVersion = 77;
 	objects = {
 
@@ -25,6 +39,8 @@
 		A0C130040B53B20C4FEFBE1F /* counties.json in Resources */ = {isa = PBXBuildFile; fileRef = B5B74288FD2DDC198AB0EF4B /* counties.json */; };
 		C31CAC3967B26A160D5E037D /* CountyNameNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F6C5E7FDB3A4A0F2453B72 /* CountyNameNormalizer.swift */; };
 		CB00CF196360AEC64DA78C4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5B4AAE4CF9B6737560973B52 /* Assets.xcassets */; };
+		234567890ABCDEF123456789 /* CountyTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDCBA9876543210FEDCBA98 /* CountyTrackerUITests.swift */; };
+		34567890ABCDEF1234567890 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDEF12345678 /* SnapshotHelper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +64,10 @@
 		D424748F3E548E45F4BE6AF9 /* county_centroids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = county_centroids.json; sourceTree = "<group>"; };
 		E3E8A5B418DF83A56FA38BFA /* CountyVisit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyVisit.swift; sourceTree = "<group>"; };
 		F1EB2B85AAEC1C8C55CC6F8A /* TipJarStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipJarStore.swift; sourceTree = "<group>"; };
+		FEDCBA9876543210FEDCBA98 /* CountyTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountyTrackerUITests.swift; sourceTree = "<group>"; };
+		1234567890ABCDEF12345678 /* SnapshotHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
+		CDEF1234567890ABCDEF1234 /* CountyTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CountyTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2468ACE13579BDF02468ACE1 /* CountyTrackerUITests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = CountyTrackerUITests/Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -56,6 +76,7 @@
 			children = (
 				BBAB84F1DA37457BE2F2C813 /* CountyTrackerIOS */,
 				C2A54EAEA411178BB547159A /* Products */,
+				ABCDEF1234567890ABCDEF12 /* CountyTrackerUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -83,6 +104,16 @@
 				D1C60FBCDFBAC3434844898C /* VisitedCountiesView.swift */,
 			);
 			path = CountyTrackerIOS;
+			sourceTree = "<group>";
+		};
+		ABCDEF1234567890ABCDEF12 /* CountyTrackerUITests */ = {
+			isa = PBXGroup;
+			children = (
+				FEDCBA9876543210FEDCBA98 /* CountyTrackerUITests.swift */,
+				1234567890ABCDEF12345678 /* SnapshotHelper.swift */,
+				2468ACE13579BDF02468ACE1 /* CountyTrackerUITests-Info.plist */,
+			);
+			path = CountyTrackerUITests;
 			sourceTree = "<group>";
 		};
 		C2A54EAEA411178BB547159A /* Products */ = {
@@ -114,6 +145,24 @@
 			productReference = 3809E092438F109F06C0A53A /* CountyTracker.app */;
 			productType = "com.apple.product-type.application";
 		};
+		567890ABCDEF123456789012 /* CountyTrackerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 890ABCDEF123456789012345 /* Build configuration list for PBXNativeTarget "CountyTrackerUITests" */;
+			buildPhases = (
+				4567890ABCDEF12345678901 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0A1ABCDEF123456789012345 /* PBXTargetDependency */,
+			);
+			name = CountyTrackerUITests;
+			packageProductDependencies = (
+			);
+			productName = CountyTrackerUITests;
+			productReference = CDEF1234567890ABCDEF1234 /* CountyTrackerUITests.xctest */;
+			productType = "com.apple.product-type.ui-testing-bundle";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -143,6 +192,7 @@
 			projectRoot = "";
 			targets = (
 				5AED0852EF1EB248AB9EA9D9 /* CountyTracker */,
+				567890ABCDEF123456789012 /* CountyTrackerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -180,6 +230,15 @@
 				880DB92D9FA93DEBAFF7B5FE /* ThemeSettings.swift in Sources */,
 				9CA49AA157EEE65EA5DB7E75 /* TipJarStore.swift in Sources */,
 				72349F9389FA75D6611BE9DC /* VisitedCountiesView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4567890ABCDEF12345678901 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				234567890ABCDEF123456789 /* CountyTrackerUITests.swift in Sources */,
+				34567890ABCDEF1234567890 /* SnapshotHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -349,6 +408,26 @@
 			};
 			name = Release;
 		};
+		67890ABCDEF1234567890123 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = ios.countytrackerUITests;
+				INFOPLIST_FILE = CountyTrackerUITests/Info.plist;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		7890ABCDEF12345678901234 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = ios.countytrackerUITests;
+				INFOPLIST_FILE = CountyTrackerUITests/Info.plist;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -357,6 +436,15 @@
 			buildConfigurations = (
 				BF83AA922C9EC71D8912C437 /* Debug */,
 				FDF642E7140528201B5B1152 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		890ABCDEF123456789012345 /* Build configuration list for PBXNativeTarget "CountyTrackerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				67890ABCDEF1234567890123 /* Debug */,
+				7890ABCDEF12345678901234 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
