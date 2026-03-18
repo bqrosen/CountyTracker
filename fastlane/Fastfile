@@ -14,9 +14,19 @@ platform :ios do
   lane :upload_screenshots do
     sh("bash fastlane/organize_screenshots.sh")
     sh("bash fastlane/resize_screenshots.sh")
-    # Use an App Store Connect API key if present, otherwise rely on configured credentials.
+    # Prefer API key provided via environment variables (recommended for CI).
+    # Supported env vars:
+    # - APP_STORE_CONNECT_KEY_ID
+    # - APP_STORE_CONNECT_ISSUER_ID
+    # - APP_STORE_CONNECT_PRIVATE_KEY  (the contents of the .p8 file)
     api_key = nil
-    if File.exist?("fastlane/AppStoreConnectAPIKey.json")
+    if ENV["APP_STORE_CONNECT_KEY_ID"] && ENV["APP_STORE_CONNECT_ISSUER_ID"] && ENV["APP_STORE_CONNECT_PRIVATE_KEY"]
+      api_key = app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+        key: ENV["APP_STORE_CONNECT_PRIVATE_KEY"]
+      )
+    elsif File.exist?("fastlane/AppStoreConnectAPIKey.json")
       api_key = app_store_connect_api_key(path: "fastlane/AppStoreConnectAPIKey.json")
     end
 
