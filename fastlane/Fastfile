@@ -9,4 +9,15 @@ platform :ios do
       clean: true
     )
   end
+
+  desc "Organize, resize, and upload screenshots to App Store Connect"
+  lane :upload_screenshots do
+    sh("bash fastlane/organize_screenshots.sh")
+    sh("bash fastlane/resize_screenshots.sh")
+    deliver(
+      screenshots_path: "fastlane/metadata",
+      skip_binary_upload: true,
+      submit_for_review: false
+    )
+  end
 end
