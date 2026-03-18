@@ -1,0 +1,18 @@
+# Snapshot configuration
+devices:
+  - "iPhone 14 Pro Max"
+  - "iPhone 12 Pro Max"
+  - "iPhone 14 Plus"
+  - "iPhone 14"
+  - "iPhone 8 Plus"
+  - "iPhone 8"
+  - "iPhone SE (2nd generation)"
+  - "iPhone 5s"
+
+languages:
+  - "en-US"
+
+scheme: "CountyTracker"
+output_directory: "~/Downloads/CountyTrackerScreenshots"
+clear_previous_screenshots: true
+skip_open_summary: true
