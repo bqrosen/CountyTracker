@@ -24,3 +24,8 @@ mapchartSave_allCountiesMaster.txt
 # Bundler
 /fastlane/vendor/bundle/
 
+# Fastlane metadata (generated screenshots) - keep local copies untracked
+fastlane/metadata/
+# App Store Connect API key (keep private)
+/fastlane/AppStoreConnectAPIKey.json
+

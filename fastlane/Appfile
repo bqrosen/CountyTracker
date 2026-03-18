@@ -1,0 +1,2 @@
+app_identifier("ios.countytracker") # The bundle identifier of your app
+apple_id("you@example.com") # Your Apple ID (used by deliver)
