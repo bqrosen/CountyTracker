@@ -10,3 +10,17 @@ DerivedData/
 
 # Local MapChart exports
 mapchartSave_allCountiesMaster.txt
+
+# Fastlane / snapshot artifacts
+/fastlane/vendor/
+/fastlane/.env
+/fastlane/report.*
+/fastlane/screenshots/
+/fastlane/preview.*
+/fastlane/metadata/
+/fastlane/.tmp/
+/fastlane/.bundle/
+
+# Bundler
+/fastlane/vendor/bundle/
+
