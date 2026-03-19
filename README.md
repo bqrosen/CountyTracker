@@ -1,65 +1,49 @@
 # CountyTracker
+Making maps of the counties you've been in is fun. I got into it when I real;ized I just needed three of four more to complete all of Califonia. Now there's an app for that. CountyTracker is a lightweight, privacy-focused iOS app that overlays county boundaries on Apple Maps, automatically keeps track of counties you've visited, and fills them in to build a personalized map of your visits over time.
 
-A SwiftUI-based iOS app that automatically tracks US counties you've visited using GPS location services.
+## Features
+- Running counter of your total number and percentage of US counties visited.
+- Long press on unexplored counties to get driving directions to them in Apple Maps.
+- Export map snapshots directly to your Photos library for sharing.
+- Import and export mapchart.net-compatible county file lists (aka configuration .txt files). I have no affiliation with [mapchart.net](https://www.mapchart.net/), but I'm a big fan.
+- Background tracking: If enabled, CountyTracker uses Apple's low-power location services (Significant-Change Location Service and the system `CLVisit` APIs), which rely primarily on cell‑tower and Wi‑Fi-based location rather than continuous GPS. This provides system-delivered, infrequent visit/location updates with minimal battery impact while remaining accurate enough for county-level tracking. It requires the `Always` location permission; you can disable background tracking in the app or revoke the permission in Settings.
+- Includes US county-equivalent subdivisions for US territories like Puerto Rico, Guam, and the USVI (toggleable).
+- View in eight colorful themes: Light, Dark, Nord, Snow, Sepia, Outrun, Cyber, Jungle
 
-## Overview
+### Privacy
+CountyTracker is fully open source and runs entirely on your device. All location and visit data are stored locally; nothing is collected, transmitted, or shared with the developer or third parties.
 
-CountyTracker is an elegant, privacy-focused mobile application designed for geography enthusiasts and road trip planners. The app uses your device's GPS to automatically record every US county you visit, building a personalized map of your county visits over time.
-
-**Current Version:** 1.1  
-**Deployment Target:** iOS 16.0+  
-**Platform:** iPhone & iPad
-
-## Technical Details
-
-### Prerequisites
-
-- macOS 13.0 or later
-- Xcode 15.0 or later
-- An iPhone/iPad running iOS 16.0 or later (for deployment)
-- An Apple Developer Account (optional, for device deployment)
+### Monetization
+This app is free to download with all features enabled and no ads. There is an in-app tip jar if you're feeling appreciative; making any in-app purchase removes the tip jar button.
 
 ### Location Permissions
-
 The app requests two types of location permissions:
-
 - **While Using**: For manual county tracking during active app use
 - **Always**: For background county tracking (optional)
 
-Both are configured in `Info.plist`:
-- `NSLocationWhenInUseUsageDescription`
-- `NSLocationAlwaysAndWhenInUseUsageDescription`
-
-### Data Storage
-
-County visit records are stored locally in `UserDefaults` under the key structure:
-```
-com.example.countytracker.visits.[county_name] = [date_visited]
-```
-
-### Supported Devices
-
-- iPhone 12 and later (tested on iPhone 14+)
+### Prerequisites 
+- iPhone 12 and later 
 - iPad Air 5th generation and later
 - iPad Pro 11-inch (3rd generation) and later
+- iOS 16.0 or later 
 
-### Compatibility
+## Support & Feedback
+For bug reports, feature requests, or general feedback:
+- Shoot me an email at dev at bqrosen.com
+- Open an issue on GitHub
 
-- **iOS Minimum**: 16.0
-- **Swift**: 5.0+
-- **Xcode**: 15.0+
+## Planned Features
+- Manually adding counties in-app (currently possible only by importing a file from [mapchart.net](https://www.mapchart.net/) or by editing a configuration file).
 
-### Geographic Data Sources
+## Author
 
-The app uses the following geospatial databases:
+**Burke Rosen**  
+GitHub: [@bqrosen](https://github.com/bqrosen)
 
-- **counties.json**: GeoJSON FeatureCollection containing boundary polygons for approximately 3,200 US counties, parishes, and county-equivalents. Includes properties: NAME, STUSAB (state abbreviation), and GEOID. Used for rendering county boundaries on the map and intersection detection.
+## Acknowledgments
 
-- **county_centroids.json**: Geographic centroid coordinates (latitude/longitude) for each US county. Used for map display optimization and feature annotations.
-
-- **us_border.geojson**: US national boundary polygon in GeoJSON format. Provides the outer boundary reference for map rendering.
-
-These datasets are bundled with the app and do not require external API calls, ensuring offline functionality and privacy.
+- US county and national boundary data sourced from the US census bureau's [TIGERweb](https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_main.html).
+- SwiftUI framework and Core Location services provided by Apple.
 
 ## License
 
@@ -76,39 +60,10 @@ With the following conditions:
 
 See the [LICENSE](LICENSE) file for the full license text.
 
-## Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -am 'Add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-Please ensure:
-- Code follows the existing style conventions
-- Changes are tested on multiple device sizes
-- Commit messages are clear and descriptive
-
-## Support & Feedback
-
-For bug reports, feature requests, or general feedback:
-- Open an issue on GitHub
-- Check existing issues to avoid duplicates
-
-## Author
-
-**Burke Rosen**  
-GitHub: [@bqrosen](https://github.com/bqrosen)
-
-## Acknowledgments
-
-- US county boundary data sourced from open geospatial datasets
-- County centroid coordinates provided by official geographic databases
-- SwiftUI framework and Core Location services provided by Apple
-
 ---
 
-**Last Updated:** March 17, 2026  
-**Status:** Active Development
+**Current Version:** 1.1  
+**Deployment Target:** iOS 16.0+  
+**Platform:** iPhone & iPad
+**Last Updated:** March 18, 2026  
+
