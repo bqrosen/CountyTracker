@@ -377,15 +377,10 @@ struct ContentView: View {
                 get: { !hasSeenOnboarding },
                 set: { if !$0 { hasSeenOnboarding = true } }
             )) {
-                LocationOnboardingView(
-                    onAllow: {
-                        hasSeenOnboarding = true
-                        locationService.requestAlwaysPermission()
-                    },
-                    onDismiss: {
-                        hasSeenOnboarding = true
-                    }
-                )
+                LocationOnboardingView(onAllow: {
+                    hasSeenOnboarding = true
+                    locationService.requestAlwaysPermission()
+                })
             }
             .sheet(isPresented: $isTipJarPresented) {
                 TipJarSheet(tipJarStore: tipJarStore) { message, didCompletePurchase in
@@ -700,7 +695,6 @@ private struct TipJarSheet: View {
 
 private struct LocationOnboardingView: View {
     let onAllow: () -> Void
-    let onDismiss: () -> Void
 
     var body: some View {
         VStack(spacing: 28) {
@@ -738,7 +732,7 @@ Your location data never leaves your device.
             Spacer()
 
             Button(action: onAllow) {
-                Text("Enable Background Tracking")
+                Text("Continue")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -746,12 +740,6 @@ Your location data never leaves your device.
             .buttonStyle(.borderedProminent)
             .padding(.horizontal, 28)
 
-            Button("Not Now") {
-                onDismiss()
-            }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .padding(.bottom, 20)
         }
         .interactiveDismissDisabled(true)
     }
