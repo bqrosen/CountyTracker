@@ -376,6 +376,21 @@ struct VisitedCountyMapView: UIViewRepresentable {
                    multi.title == CountyBoundaryLoader.USBorderKey {
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
                     renderer.setNeedsDisplay()
+                } else if let multi = overlay as? MKMultiPolygon,
+                          let renderer = mapView.renderer(for: overlay) as? MKMultiPolygonRenderer,
+                          multi.title != CountyBoundaryLoader.USBorderKey {
+                    // Handle county MultiPolygons
+                    let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(multi.title)
+                    let isVisited = parent.visitedKeys.contains(multi.title ?? "")
+                    if !parent.showTerritories && isTerritory {
+                        renderer.fillColor = .clear
+                        renderer.strokeColor = .clear
+                    } else {
+                        // Add subtle fill to all counties to hide micro-gaps in geometry
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
+                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : strokeColor.withAlphaComponent(0.25)
+                    }
+                    renderer.setNeedsDisplay()
                 } else if let polygon = overlay as? MKPolygon,
                           let renderer = mapView.renderer(for: overlay) as? MKPolygonRenderer {
                     let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(polygon.title)
@@ -384,7 +399,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         renderer.fillColor = .clear
                         renderer.strokeColor = .clear
                     } else {
-                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                        // Add subtle fill to all counties to hide micro-gaps in geometry
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
                         // Always show subtle county boundaries to prevent gaps between adjacent counties
                         renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : strokeColor.withAlphaComponent(0.25)
                     }
@@ -441,6 +457,27 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 renderer.fillColor   = .clear
                 return renderer
             }
+            // Handle county MultiPolygons (multi-part counties)
+            if let multi = overlay as? MKMultiPolygon,
+               multi.title != CountyBoundaryLoader.USBorderKey {
+                let renderer = MKMultiPolygonRenderer(multiPolygon: multi)
+                let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
+                let fillColor = UIColor(parent.themeSettings.mapFillColor)
+                let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(multi.title)
+                let isVisited = parent.visitedKeys.contains(multi.title ?? "")
+                if !parent.showTerritories && isTerritory {
+                    renderer.fillColor = .clear
+                    renderer.strokeColor = .clear
+                } else {
+                    // Add subtle fill to all counties to hide micro-gaps in geometry
+                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
+                    // Always show subtle county boundaries to prevent gaps
+                    let isFarZoom = currentSpan > 20.0
+                    renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
+                }
+                renderer.lineWidth = 2.5
+                return renderer
+            }
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
@@ -451,13 +488,14 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     renderer.fillColor = .clear
                     renderer.strokeColor = .clear
                 } else {
-                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                    // Add subtle fill to all counties to hide micro-gaps in geometry
+                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
                     // Always show subtle county boundaries to prevent gaps between adjacent counties
                     // Use lower opacity for zoomed-out view
                     let isFarZoom = currentSpan > 20.0
                     renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
                 }
-                renderer.lineWidth = 1.5
+                renderer.lineWidth = 2.5
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
