@@ -102,7 +102,7 @@ final class CountyTrackerStore: ObservableObject {
     }
 
     @discardableResult
-    private func upsertVisit(
+    func upsertVisit(
         countyName: String,
         stateCode: String,
         countryCode: String,

@@ -149,7 +149,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         var currentSpan: Double = 28.0
         private var lastStrokeVisibility = true
         var overlaysLoaded = false
-        private var lastGestureMode = false
+        var lastGestureMode = false
 
         init(_ parent: VisitedCountyMapView) {
             self.parent = parent
@@ -227,10 +227,6 @@ struct VisitedCountyMapView: UIViewRepresentable {
         }
 
         private func findCountyAtCoordinate(_ coordinate: CLLocationCoordinate2D, in mapView: MKMapView) -> String? {
-            let tapPoint = MKMapPoint(coordinate)
-            var closestCounty: String? = nil
-            var closestDistance = CLLocationDistance.infinity
-            
             for overlay in mapView.overlays {
                 // Skip the US border polygon
                 if let polygon = overlay as? MKPolygon,
@@ -253,7 +249,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 }
             }
             
-            return closestCounty
+            return nil
         }
 
         private func pointInPolygon(coordinate: CLLocationCoordinate2D, polygon: MKPolygon) -> Bool {
