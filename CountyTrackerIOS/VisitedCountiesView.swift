@@ -367,7 +367,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         func refreshRenderers(on mapView: MKMapView) {
             let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
             let fillColor   = UIColor(parent.themeSettings.mapFillColor)
-            let showStrokes = currentSpan <= 10.0
+            let isFarZoom = currentSpan > 20.0
 
             for overlay in mapView.overlays {
                 // US border is now an MKMultiPolygon to prevent zoom-out clipping.
@@ -387,8 +387,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         renderer.strokeColor = .clear
                     } else {
                         // Show fill only when zoomed out
-                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (showStrokes ? fillColor.withAlphaComponent(0.05) : .clear)
-                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : strokeColor.withAlphaComponent(0.25)
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
+                        renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
                     }
                     renderer.setNeedsDisplay()
                 } else if let polygon = overlay as? MKPolygon,
@@ -400,9 +400,9 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         renderer.strokeColor = .clear
                     } else {
                         // Show fill only when zoomed out
-                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (showStrokes ? fillColor.withAlphaComponent(0.05) : .clear)
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
                         // Always show subtle county boundaries to prevent gaps between adjacent counties
-                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : strokeColor.withAlphaComponent(0.25)
+                        renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
                     }
                     renderer.setNeedsDisplay()
                 }
