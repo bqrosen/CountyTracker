@@ -30,7 +30,7 @@ The app requests two types of location permissions:
 ## Support & Feedback
 For bug reports, feature requests, or general feedback:
 - Shoot me an email at dev at bqrosen.com
-- Open an issue on GitHub
+- Or open an issue on GitHub
 
 ## Planned Features
 - Manually adding counties in-app (currently possible only by importing a file from [mapchart.net](https://www.mapchart.net/) or by editing a configuration file).

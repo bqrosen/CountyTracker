@@ -649,14 +649,22 @@ private struct TipJarSheet: View {
                             Button {
                                 Task { await purchase(product) }
                             } label: {
-                                HStack {
-                                    Text("Tip \(product.displayPrice)")
-                                        .fontWeight(.semibold)
-                                    Spacer()
-                                    Text(product.displayPrice)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(product.displayName)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        Text(product.displayPrice)
+                                            .fontWeight(.bold)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Text(product.description)
+                                        .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(2)
                                 }
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .buttonStyle(.borderedProminent)
                             .disabled(isPurchasing)
