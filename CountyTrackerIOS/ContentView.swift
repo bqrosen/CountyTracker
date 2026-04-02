@@ -43,6 +43,7 @@ struct ContentView: View {
     @State private var lastPaletteTheme: AppTheme?
     @State private var cachedMapKeys: Set<String>?
     @State private var lastShowTerritoriesForKeys: Bool?
+    @State private var isManualAddMode = false
     @StateObject private var tipJarStore = TipJarStore()
 
     private let quickTutorialSteps = [
@@ -114,6 +115,14 @@ struct ContentView: View {
                     HStack(spacing: 2) {
                         // Left side: button controls
                         VStack(alignment: .leading, spacing: 8) {
+                            Button(isManualAddMode ? "Cancel Add Mode" : "Add Counties") {
+                                isManualAddMode.toggle()
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(isManualAddMode ? .orange : nil)
+                            .font(.caption)
+                            .lineLimit(1)
+                            
                             Menu {
                                 Button("Import mapchart.net style File") {
                                     isImporting = true
@@ -159,6 +168,8 @@ struct ContentView: View {
                             isTracking: locationService.isTracking,
                             resetMapZoom: $resetMapZoom,
                             theme: themeSettings.selectedTheme,
+                            isManualAddMode: $isManualAddMode,
+                            store: store,
                             onCoordinatorReady: { coordinator in
                                 mapCoordinator = coordinator
                             }
@@ -177,6 +188,8 @@ struct ContentView: View {
                                 isTracking: locationService.isTracking,
                                 resetMapZoom: $resetMapZoom,
                                 theme: themeSettings.selectedTheme,
+                                isManualAddMode: $isManualAddMode,
+                                store: store,
                                 onCoordinatorReady: { coordinator in
                                     mapCoordinator = coordinator
                                 }
@@ -187,6 +200,12 @@ struct ContentView: View {
 
                             VStack(spacing: 12) {
                                 HStack(spacing: 8) {
+                                    Button(isManualAddMode ? "Cancel Add Mode" : "Add Counties") {
+                                        isManualAddMode.toggle()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(isManualAddMode ? .orange : nil)
+                                    .lineLimit(1)
                                     Button(showTerritories ? "Hide Territories" : "Show Territories") {
                                         showTerritories.toggle()
                                     }

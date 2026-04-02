@@ -82,6 +82,13 @@ final class CountyTrackerStore: ObservableObject {
         persist()
     }
 
+    func removeVisit(with key: String) {
+        if let index = visits.firstIndex(where: { $0.key == key }) {
+            visits.remove(at: index)
+            persist()
+        }
+    }
+
     var totalUniqueCounties: Int {
         visits.count
     }

@@ -11,6 +11,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
     let isTracking: Bool
     @Binding var resetMapZoom: Bool
     let theme: AppTheme
+    @Binding var isManualAddMode: Bool
+    let store: CountyTrackerStore
     var onCoordinatorReady: ((Coordinator) -> Void)?
     @EnvironmentObject private var themeSettings: ThemeSettings
 
@@ -57,12 +59,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
         context.coordinator.lastTheme = theme
         context.coordinator.lastShowTerritories = showTerritories
 
-        let longPress = UILongPressGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleLongPress(_:))
-        )
-        longPress.minimumPressDuration = 0.6
-        mapView.addGestureRecognizer(longPress)
+        // Set up gesture recognizer based on manual add mode
+        context.coordinator.setupGestureRecognizer(on: mapView, for: isManualAddMode)
 
         // Notify parent that coordinator is ready
         onCoordinatorReady?(context.coordinator)
@@ -119,6 +117,12 @@ struct VisitedCountyMapView: UIViewRepresentable {
             }
         }
 
+        // Update gesture recognizer if manual add mode changed
+        if isManualAddMode != context.coordinator.lastGestureMode {
+            context.coordinator.lastGestureMode = isManualAddMode
+            context.coordinator.setupGestureRecognizer(on: mapView, for: isManualAddMode)
+        }
+
         // Hide GPS icon when not tracking
         mapView.showsUserLocation = isTracking
 
@@ -145,6 +149,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         var currentSpan: Double = 28.0
         private var lastStrokeVisibility = true
         var overlaysLoaded = false
+        private var lastGestureMode = false
 
         init(_ parent: VisitedCountyMapView) {
             self.parent = parent
@@ -186,6 +191,135 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 }
                 let snapshot = self.takeSnapshot(of: mapView)
                 completion(snapshot)
+            }
+        }
+
+        func setupGestureRecognizer(on mapView: MKMapView, for isManualAddMode: Bool) {
+            // Remove existing gesture recognizers
+            mapView.gestureRecognizers?.forEach { mapView.removeGestureRecognizer($0) }
+            
+            if isManualAddMode {
+                let tap = UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(handleTap(_:))
+                )
+                mapView.addGestureRecognizer(tap)
+            } else {
+                let longPress = UILongPressGestureRecognizer(
+                    target: self,
+                    action: #selector(handleLongPress(_:))
+                )
+                longPress.minimumPressDuration = 0.6
+                mapView.addGestureRecognizer(longPress)
+            }
+        }
+
+        @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+            guard gesture.state == .ended, let mapView = mapView else { return }
+            
+            let point = gesture.location(in: mapView)
+            let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
+            
+            // Find which county polygon contains this coordinate
+            if let countyKey = findCountyAtCoordinate(coordinate, in: mapView) {
+                addOrRemoveCounty(with: countyKey)
+            }
+        }
+
+        private func findCountyAtCoordinate(_ coordinate: CLLocationCoordinate2D, in mapView: MKMapView) -> String? {
+            let tapPoint = MKMapPoint(coordinate)
+            var closestCounty: String? = nil
+            var closestDistance = CLLocationDistance.infinity
+            
+            for overlay in mapView.overlays {
+                // Skip the US border polygon
+                if let polygon = overlay as? MKPolygon,
+                   polygon.title != CountyBoundaryLoader.USBorderKey,
+                   let title = polygon.title {
+                    
+                    // Use a simple point-in-polygon test
+                    if pointInPolygon(coordinate: coordinate, polygon: polygon) {
+                        return title // Return immediately when we find a match
+                    }
+                }
+                // Also check multipolygons (shouldn't be counties, but be safe)
+                if let multi = overlay as? MKMultiPolygon,
+                   multi.title != CountyBoundaryLoader.USBorderKey {
+                    for polygon in multi.polygons {
+                        if pointInPolygon(coordinate: coordinate, polygon: polygon) {
+                            return multi.title
+                        }
+                    }
+                }
+            }
+            
+            return closestCounty
+        }
+
+        private func pointInPolygon(coordinate: CLLocationCoordinate2D, polygon: MKPolygon) -> Bool {
+            // Use ray casting algorithm for point-in-polygon test
+            let points = polygon.points()
+            let count = polygon.pointCount
+            
+            var inside = false
+            var p1 = points[0].coordinate
+            
+            for i in 1...count {
+                let p2 = points[i % count].coordinate
+                
+                if coordinate.latitude > min(p1.latitude, p2.latitude) {
+                    if coordinate.latitude <= max(p1.latitude, p2.latitude) {
+                        if coordinate.longitude <= max(p1.longitude, p2.longitude) {
+                            if p1.latitude != p2.latitude {
+                                let xinters = (coordinate.latitude - p1.latitude) * (p2.longitude - p1.longitude) / (p2.latitude - p1.latitude) + p1.longitude
+                                if p1.longitude == p2.longitude || coordinate.longitude <= xinters {
+                                    inside = !inside
+                                }
+                            }
+                        }
+                    }
+                }
+                p1 = p2
+            }
+            
+            return inside
+        }
+
+        private func addOrRemoveCounty(with countyKey: String) {
+            // Parse county key: "us-STATE-COUNTY"
+            let components = countyKey.lowercased().split(separator: "-").map(String.init)
+            guard components.count >= 3, components[0] == "us" else { return }
+            
+            let stateCode = String(components[1]).uppercased()
+            let countyName = components.dropFirst(2).joined(separator: "-")
+            
+            Task {
+                await MainActor.run {
+                    // Check if already visited
+                    let lookupKey = CountyNameNormalizer.countyKey(
+                        countryCode: "US",
+                        stateCode: stateCode,
+                        countyName: countyName
+                    )
+                    
+                    if parent.visitedKeys.contains(lookupKey) {
+                        // Remove it
+                        parent.store.removeVisit(with: lookupKey)
+                        // Notify parent of change (optional - just for haptic feedback)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } else {
+                        // Add it
+                        parent.store.upsertVisit(
+                            countyName: countyName,
+                            stateCode: stateCode,
+                            countryCode: "US",
+                            timestamp: Date(),
+                            incrementVisitCount: false
+                        )
+                        // Notify parent of change (optional - just for haptic feedback)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+                }
             }
         }
 
