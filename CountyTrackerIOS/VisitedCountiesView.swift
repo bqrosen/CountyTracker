@@ -386,8 +386,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         renderer.fillColor = .clear
                         renderer.strokeColor = .clear
                     } else {
-                        // Add subtle fill to all counties to hide micro-gaps in geometry
-                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
+                        // Show fill only when zoomed out
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (showStrokes ? fillColor.withAlphaComponent(0.05) : .clear)
                         renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : strokeColor.withAlphaComponent(0.25)
                     }
                     renderer.setNeedsDisplay()
@@ -399,8 +399,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         renderer.fillColor = .clear
                         renderer.strokeColor = .clear
                     } else {
-                        // Add subtle fill to all counties to hide micro-gaps in geometry
-                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
+                        // Show fill only when zoomed out
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (showStrokes ? fillColor.withAlphaComponent(0.05) : .clear)
                         // Always show subtle county boundaries to prevent gaps between adjacent counties
                         renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : strokeColor.withAlphaComponent(0.25)
                     }
@@ -469,10 +469,10 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     renderer.fillColor = .clear
                     renderer.strokeColor = .clear
                 } else {
-                    // Add subtle fill to all counties to hide micro-gaps in geometry
-                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
-                    // Always show subtle county boundaries to prevent gaps
+                    // Show fill only when zoomed out
                     let isFarZoom = currentSpan > 20.0
+                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
+                    // Always show subtle county boundaries to prevent gaps
                     renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
                 }
                 renderer.lineWidth = 2.5
@@ -488,11 +488,10 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     renderer.fillColor = .clear
                     renderer.strokeColor = .clear
                 } else {
-                    // Add subtle fill to all counties to hide micro-gaps in geometry
-                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : fillColor.withAlphaComponent(0.05)
-                    // Always show subtle county boundaries to prevent gaps between adjacent counties
-                    // Use lower opacity for zoomed-out view
+                    // Show fill only when zoomed out
                     let isFarZoom = currentSpan > 20.0
+                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
+                    // Always show subtle county boundaries to prevent gaps between adjacent counties
                     renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
                 }
                 renderer.lineWidth = 2.5
