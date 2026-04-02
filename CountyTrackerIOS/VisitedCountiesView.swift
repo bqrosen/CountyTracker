@@ -385,7 +385,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         renderer.strokeColor = .clear
                     } else {
                         renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : .clear
+                        // Always show subtle county boundaries to prevent gaps between adjacent counties
+                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : strokeColor.withAlphaComponent(0.25)
                     }
                     renderer.setNeedsDisplay()
                 }
@@ -451,7 +452,10 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     renderer.strokeColor = .clear
                 } else {
                     renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
-                    renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
+                    // Always show subtle county boundaries to prevent gaps between adjacent counties
+                    // Use lower opacity for zoomed-out view
+                    let isFarZoom = currentSpan > 20.0
+                    renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
                 }
                 renderer.lineWidth = 1.5
                 return renderer
