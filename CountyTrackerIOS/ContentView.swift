@@ -200,12 +200,6 @@ struct ContentView: View {
 
                             VStack(spacing: 12) {
                                 HStack(spacing: 8) {
-                                    Button(isManualAddMode ? "Cancel Add Mode" : "Add Counties") {
-                                        isManualAddMode.toggle()
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .tint(isManualAddMode ? .orange : nil)
-                                    .lineLimit(1)
                                     Button(showTerritories ? "Hide Territories" : "Show Territories") {
                                         showTerritories.toggle()
                                     }
@@ -296,6 +290,12 @@ struct ContentView: View {
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .tint(palette.accent)
+
+                                Button(isManualAddMode ? "Cancel Add Mode" : "Add Counties") {
+                                    isManualAddMode.toggle()
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(isManualAddMode ? .orange : nil)
 
                                 Button("Location Settings") {
                                     locationService.openAppSettings()
