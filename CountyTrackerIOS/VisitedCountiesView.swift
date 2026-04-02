@@ -367,7 +367,7 @@ struct VisitedCountyMapView: UIViewRepresentable {
         func refreshRenderers(on mapView: MKMapView) {
             let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
             let fillColor   = UIColor(parent.themeSettings.mapFillColor)
-            let isFarZoom = currentSpan > 20.0
+            let showStrokes = currentSpan <= 10.0
 
             for overlay in mapView.overlays {
                 // US border is now an MKMultiPolygon to prevent zoom-out clipping.
@@ -375,21 +375,6 @@ struct VisitedCountyMapView: UIViewRepresentable {
                    let renderer = mapView.renderer(for: overlay) as? MKMultiPolygonRenderer,
                    multi.title == CountyBoundaryLoader.USBorderKey {
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
-                    renderer.setNeedsDisplay()
-                } else if let multi = overlay as? MKMultiPolygon,
-                          let renderer = mapView.renderer(for: overlay) as? MKMultiPolygonRenderer,
-                          multi.title != CountyBoundaryLoader.USBorderKey {
-                    // Handle county MultiPolygons
-                    let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(multi.title)
-                    let isVisited = parent.visitedKeys.contains(multi.title ?? "")
-                    if !parent.showTerritories && isTerritory {
-                        renderer.fillColor = .clear
-                        renderer.strokeColor = .clear
-                    } else {
-                        // Show fill only when zoomed out
-                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
-                        renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
-                    }
                     renderer.setNeedsDisplay()
                 } else if let polygon = overlay as? MKPolygon,
                           let renderer = mapView.renderer(for: overlay) as? MKPolygonRenderer {
@@ -399,10 +384,8 @@ struct VisitedCountyMapView: UIViewRepresentable {
                         renderer.fillColor = .clear
                         renderer.strokeColor = .clear
                     } else {
-                        // Show fill only when zoomed out
-                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
-                        // Always show subtle county boundaries to prevent gaps between adjacent counties
-                        renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : .clear
                     }
                     renderer.setNeedsDisplay()
                 }
@@ -457,27 +440,6 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 renderer.fillColor   = .clear
                 return renderer
             }
-            // Handle county MultiPolygons (multi-part counties)
-            if let multi = overlay as? MKMultiPolygon,
-               multi.title != CountyBoundaryLoader.USBorderKey {
-                let renderer = MKMultiPolygonRenderer(multiPolygon: multi)
-                let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
-                let fillColor = UIColor(parent.themeSettings.mapFillColor)
-                let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(multi.title)
-                let isVisited = parent.visitedKeys.contains(multi.title ?? "")
-                if !parent.showTerritories && isTerritory {
-                    renderer.fillColor = .clear
-                    renderer.strokeColor = .clear
-                } else {
-                    // Show fill only when zoomed out
-                    let isFarZoom = currentSpan > 20.0
-                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
-                    // Always show subtle county boundaries to prevent gaps
-                    renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
-                }
-                renderer.lineWidth = 2.5
-                return renderer
-            }
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
@@ -488,13 +450,10 @@ struct VisitedCountyMapView: UIViewRepresentable {
                     renderer.fillColor = .clear
                     renderer.strokeColor = .clear
                 } else {
-                    // Show fill only when zoomed out
-                    let isFarZoom = currentSpan > 20.0
-                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : (isFarZoom ? fillColor.withAlphaComponent(0.05) : .clear)
-                    // Always show subtle county boundaries to prevent gaps between adjacent counties
-                    renderer.strokeColor = isFarZoom ? strokeColor.withAlphaComponent(0.15) : strokeColor.withAlphaComponent(0.85)
+                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                    renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
                 }
-                renderer.lineWidth = 2.5
+                renderer.lineWidth = 1.5
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
