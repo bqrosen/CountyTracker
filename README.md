@@ -63,5 +63,5 @@ See the [LICENSE](LICENSE) file for the full license text.
 **Current Version:** 1.2  
 **Deployment Target:** iOS 16.0+  
 **Platform:** iPhone & iPad
-**Last Updated:** March 18, 2026  
+**Last Updated:** 2026-04-02  
 
