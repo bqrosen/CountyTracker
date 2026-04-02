@@ -42,6 +42,26 @@ private struct PolygonRecord {
     }
 }
 
+/// Holds the raw coordinate data for a multi-polygon (counties with multiple disconnected parts),
+/// so we can create fresh MKMultiPolygon instances while preserving the geographic relationship
+/// between parts and avoiding rendering gaps.
+private struct MultiPolygonRecord {
+    let polygonRecords: [PolygonRecord]
+    let key: String
+
+    init(multiPolygon: MKMultiPolygon, key: String) {
+        self.polygonRecords = multiPolygon.polygons.map { PolygonRecord(polygon: $0, key: key) }
+        self.key = key
+    }
+
+    func makeMultiPolygon() -> MKMultiPolygon {
+        let polys = polygonRecords.map { $0.makePolygon() }
+        let multi = MKMultiPolygon(polys)
+        multi.title = key
+        return multi
+    }
+}
+
 /// Holds centroid data for one county annotation.
 private struct AnnotationRecord {
     let coordinate: CLLocationCoordinate2D
@@ -64,6 +84,7 @@ actor CountyBoundaryLoader {
     private init() {}
 
     private var polygonRecords: [PolygonRecord]?
+    private var multiPolygonRecords: [MultiPolygonRecord]?
     private var annotationRecords: [AnnotationRecord]?
     private var borderRecords: [PolygonRecord]?
     
@@ -72,17 +93,21 @@ actor CountyBoundaryLoader {
 
     // MARK: Polygons
 
-    /// Returns freshly created MKPolygon instances for all ~3,200 US counties.
-    /// Each polygon's `title` is set to its county key.
+    /// Returns freshly created overlay instances (MKPolygon + MKMultiPolygon) for all US counties.
+    /// Each overlay's `title` is set to its county key.
+    /// MultiPolygons are preserved intact to avoid rendering gaps for multi-part counties.
     /// Parses the JSON only once; subsequent calls create new instances from cached data.
-    func loadPolygons() async throws -> [MKPolygon] {
-        if polygonRecords == nil {
-            polygonRecords = try await parsePolygonRecords()
+    func loadPolygons() async throws -> [MKOverlay] {
+        if polygonRecords == nil || multiPolygonRecords == nil {
+            try await parsePolygonRecords()
         }
-        return polygonRecords!.map { $0.makePolygon() }
+        var result: [MKOverlay] = []
+        result.append(contentsOf: polygonRecords!.map { $0.makePolygon() })
+        result.append(contentsOf: multiPolygonRecords!.map { $0.makeMultiPolygon() })
+        return result
     }
 
-    private func parsePolygonRecords() async throws -> [PolygonRecord] {
+    private func parsePolygonRecords() async throws {
         guard let url = Bundle.main.url(forResource: "counties", withExtension: "json") else {
             print("CountyBoundaryLoader: counties.json NOT found in bundle")
             throw CocoaError(.fileNoSuchFile)
@@ -109,8 +134,11 @@ actor CountyBoundaryLoader {
         }
         let collisions: Set<String> = Set(nameStateCounts.filter { $0.value > 1 }.keys)
 
-        // Second pass: build polygon records, appending " city" only for true collisions.
-        var result: [PolygonRecord] = []
+        // Second pass: build polygon and multipolygon records, appending " city" only for true collisions.
+        // Preserve MultiPolygons intact instead of splitting them to avoid rendering gaps.
+        var polygons: [PolygonRecord] = []
+        var multiPolygons: [MultiPolygonRecord] = []
+        
         for object in objects {
             guard
                 let feature   = object as? MKGeoJSONFeature,
@@ -133,17 +161,17 @@ actor CountyBoundaryLoader {
 
             for geometry in feature.geometry {
                 if let polygon = geometry as? MKPolygon {
-                    result.append(PolygonRecord(polygon: polygon, key: key))
+                    polygons.append(PolygonRecord(polygon: polygon, key: key))
                 } else if let multi = geometry as? MKMultiPolygon {
-                    for polygon in multi.polygons {
-                        result.append(PolygonRecord(polygon: polygon, key: key))
-                    }
+                    // Preserve MultiPolygon as a single unit to avoid rendering gaps
+                    multiPolygons.append(MultiPolygonRecord(multiPolygon: multi, key: key))
                 }
             }
         }
 
-        print("CountyBoundaryLoader: cached \(result.count) polygon records")
-        return result
+        self.polygonRecords = polygons
+        self.multiPolygonRecords = multiPolygons
+        print("CountyBoundaryLoader: cached \(polygons.count) polygon records and \(multiPolygons.count) multipolygon records")
     }
 
     // MARK: Centroid annotations
