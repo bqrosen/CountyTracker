@@ -379,6 +379,19 @@ struct VisitedCountyMapView: UIViewRepresentable {
                    multi.title == CountyBoundaryLoader.USBorderKey {
                     renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
                     renderer.setNeedsDisplay()
+                } else if let multi = overlay as? MKMultiPolygon,
+                          let renderer = mapView.renderer(for: overlay) as? MKMultiPolygonRenderer {
+                    // County MultiPolygons (e.g., Los Angeles)
+                    let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(multi.title)
+                    let isVisited = parent.visitedKeys.contains(multi.title ?? "")
+                    if !parent.showTerritories && isTerritory {
+                        renderer.fillColor = .clear
+                        renderer.strokeColor = .clear
+                    } else {
+                        renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                        renderer.strokeColor = showStrokes ? strokeColor.withAlphaComponent(0.85) : .clear
+                    }
+                    renderer.setNeedsDisplay()
                 } else if let polygon = overlay as? MKPolygon,
                           let renderer = mapView.renderer(for: overlay) as? MKPolygonRenderer {
                     let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(polygon.title)
@@ -441,6 +454,23 @@ struct VisitedCountyMapView: UIViewRepresentable {
                 renderer.strokeColor = strokeColor.withAlphaComponent(0.90)
                 renderer.lineWidth   = 1.5
                 renderer.fillColor   = .clear
+                return renderer
+            }
+            // County MultiPolygons (e.g., Los Angeles with island territories)
+            if let multi = overlay as? MKMultiPolygon {
+                let renderer = MKMultiPolygonRenderer(multiPolygon: multi)
+                let strokeColor = UIColor(parent.themeSettings.mapStrokeColor)
+                let fillColor = UIColor(parent.themeSettings.mapFillColor)
+                let isTerritory = VisitedCountyMapView.isTerritoryCountyKey(multi.title)
+                let isVisited = parent.visitedKeys.contains(multi.title ?? "")
+                if !parent.showTerritories && isTerritory {
+                    renderer.fillColor = .clear
+                    renderer.strokeColor = .clear
+                } else {
+                    renderer.fillColor = isVisited ? fillColor.withAlphaComponent(0.60) : .clear
+                    renderer.strokeColor = currentSpan > 20.0 ? UIColor.clear : strokeColor.withAlphaComponent(0.85)
+                }
+                renderer.lineWidth = 1.5
                 return renderer
             }
             if let polygon = overlay as? MKPolygon {
