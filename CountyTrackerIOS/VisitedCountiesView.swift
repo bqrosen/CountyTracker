@@ -283,11 +283,14 @@ struct VisitedCountyMapView: UIViewRepresentable {
 
         private func addOrRemoveCounty(with countyKey: String) {
             // Parse county key: "us-STATE-COUNTY"
-            let components = countyKey.lowercased().split(separator: "-").map(String.init)
-            guard components.count >= 3, components[0] == "us" else { return }
+            // County names may contain spaces (e.g., "Los Angeles"), so we split carefully:
+            // 1. Extract country and state from the beginning
+            // 2. Everything after the state is the county name (may contain spaces)
+            let parts = countyKey.lowercased().split(separator: "-", maxSplits: 2).map(String.init)
+            guard parts.count == 3, parts[0] == "us" else { return }
             
-            let stateCode = String(components[1]).uppercased()
-            let countyName = components.dropFirst(2).joined(separator: "-")
+            let stateCode = String(parts[1]).uppercased()
+            let countyName = parts[2]
             
             Task {
                 await MainActor.run {
