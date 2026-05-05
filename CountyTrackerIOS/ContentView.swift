@@ -316,7 +316,7 @@ struct ContentView: View {
                                 Button {
                                     isTipJarPresented = true
                                 } label: {
-                                    Label("Support CountyTracker  ☕", systemImage: "heart.fill")
+                                    Label("Support CountyTracker", systemImage: "cup.and.saucer.fill")
                                         .font(.headline)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)

@@ -60,7 +60,7 @@ See the [LICENSE](LICENSE) file for the full license text.
 
 ---
 
-**Current Version:** 1.2  
+**Current Version:** 1.2.1  
 **Deployment Target:** iOS 16.0+  
 **Platform:** iPhone & iPad
 **Last Updated:** 2026-04-02  

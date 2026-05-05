@@ -33,7 +33,7 @@ targets:
         CFBundleInfoDictionaryVersion: "6.0"
         CFBundleName: $(PRODUCT_NAME)
         CFBundlePackageType: APPL
-        CFBundleShortVersionString: "1.0"
+        CFBundleShortVersionString: "1.2.1"
         CFBundleVersion: "1"
         LSRequiresIPhoneOS: true
         UIApplicationSceneManifest:

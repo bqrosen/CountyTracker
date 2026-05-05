@@ -89,7 +89,28 @@ actor CountyBoundaryLoader {
     private var borderRecords: [PolygonRecord]?
     
     static let USBorderKey = "_us_border"
-    private static let maxBorderRingPoints = 6000
+    private static let stateFPToUSPS: [String: String] = [
+        "01": "AL", "02": "AK", "04": "AZ", "05": "AR", "06": "CA", "08": "CO",
+        "09": "CT", "10": "DE", "11": "DC", "12": "FL", "13": "GA", "15": "HI",
+        "16": "ID", "17": "IL", "18": "IN", "19": "IA", "20": "KS", "21": "KY",
+        "22": "LA", "23": "ME", "24": "MD", "25": "MA", "26": "MI", "27": "MN",
+        "28": "MS", "29": "MO", "30": "MT", "31": "NE", "32": "NV", "33": "NH",
+        "34": "NJ", "35": "NM", "36": "NY", "37": "NC", "38": "ND", "39": "OH",
+        "40": "OK", "41": "OR", "42": "PA", "44": "RI", "45": "SC", "46": "SD",
+        "47": "TN", "48": "TX", "49": "UT", "50": "VT", "51": "VA", "53": "WA",
+        "54": "WV", "55": "WI", "56": "WY", "60": "AS", "66": "GU", "69": "MP",
+        "72": "PR", "78": "VI"
+    ]
+
+    private static func resolveStateCode(from properties: [String: Any]) -> String? {
+        if let stusab = properties["STUSAB"] as? String, !stusab.isEmpty {
+            return stusab.uppercased()
+        }
+        if let statefp = properties["STATEFP"] as? String {
+            return stateFPToUSPS[statefp]
+        }
+        return nil
+    }
 
     // MARK: Polygons
 
@@ -127,7 +148,7 @@ actor CountyBoundaryLoader {
                 let propsData = feature.properties,
                 let props     = try? JSONSerialization.jsonObject(with: propsData) as? [String: Any],
                 let name      = props["NAME"]   as? String,
-                let stusab    = props["STUSAB"] as? String
+                let stusab    = Self.resolveStateCode(from: props)
             else { continue }
             let pairKey = "\(name.lowercased())|\(stusab.lowercased())"
             nameStateCounts[pairKey, default: 0] += 1
@@ -145,7 +166,7 @@ actor CountyBoundaryLoader {
                 let propsData = feature.properties,
                 let props     = try? JSONSerialization.jsonObject(with: propsData) as? [String: Any],
                 let name      = props["NAME"]   as? String,
-                let stusab    = props["STUSAB"] as? String
+                let stusab    = Self.resolveStateCode(from: props)
             else { continue }
 
             let lsad = (props["LSAD"] as? String ?? "").lowercased()
@@ -303,12 +324,10 @@ actor CountyBoundaryLoader {
 
             for geometry in feature.geometry {
                 if let polygon = geometry as? MKPolygon {
-                    let simplified = simplifyBorderPolygonIfNeeded(polygon)
-                    result.append(PolygonRecord(polygon: simplified, key: Self.USBorderKey))
+                    result.append(PolygonRecord(polygon: polygon, key: Self.USBorderKey))
                 } else if let multi = geometry as? MKMultiPolygon {
                     for polygon in multi.polygons {
-                        let simplified = simplifyBorderPolygonIfNeeded(polygon)
-                        result.append(PolygonRecord(polygon: simplified, key: Self.USBorderKey))
+                        result.append(PolygonRecord(polygon: polygon, key: Self.USBorderKey))
                     }
                 }
             }
@@ -316,50 +335,6 @@ actor CountyBoundaryLoader {
 
         print("CountyBoundaryLoader: cached \(result.count) border polygon records")
         return result
-    }
-
-    private func simplifyBorderPolygonIfNeeded(_ polygon: MKPolygon) -> MKPolygon {
-        var outer = [CLLocationCoordinate2D](repeating: .init(), count: polygon.pointCount)
-        polygon.getCoordinates(&outer, range: NSRange(location: 0, length: polygon.pointCount))
-        outer = downsampleRingIfNeeded(outer, maxPoints: Self.maxBorderRingPoints)
-
-        let holes: [MKPolygon]? = polygon.interiorPolygons?.map { hole in
-            var holeCoords = [CLLocationCoordinate2D](repeating: .init(), count: hole.pointCount)
-            hole.getCoordinates(&holeCoords, range: NSRange(location: 0, length: hole.pointCount))
-            holeCoords = downsampleRingIfNeeded(holeCoords, maxPoints: Self.maxBorderRingPoints)
-            return MKPolygon(coordinates: &holeCoords, count: holeCoords.count)
-        }
-
-        return MKPolygon(
-            coordinates: &outer,
-            count: outer.count,
-            interiorPolygons: (holes?.isEmpty ?? true) ? nil : holes
-        )
-    }
-
-    private func downsampleRingIfNeeded(_ coordinates: [CLLocationCoordinate2D], maxPoints: Int) -> [CLLocationCoordinate2D] {
-        guard coordinates.count > maxPoints, maxPoints >= 4 else { return coordinates }
-
-        let isClosed = coordinates.first?.latitude == coordinates.last?.latitude
-            && coordinates.first?.longitude == coordinates.last?.longitude
-
-        let base = isClosed ? Array(coordinates.dropLast()) : coordinates
-        guard base.count > maxPoints else { return coordinates }
-
-        let targetCount = maxPoints - (isClosed ? 1 : 0)
-        let step = Double(base.count - 1) / Double(targetCount - 1)
-        var sampled: [CLLocationCoordinate2D] = []
-        sampled.reserveCapacity(maxPoints)
-
-        for i in 0..<targetCount {
-            let idx = Int((Double(i) * step).rounded())
-            sampled.append(base[min(idx, base.count - 1)])
-        }
-
-        if isClosed, let first = sampled.first {
-            sampled.append(first)
-        }
-        return sampled
     }
 }
 
